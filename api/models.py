@@ -59,11 +59,9 @@ class Observation(BaseModel):
 class Plant(BaseModel):
     plant_id: Optional[int] = None
     # Removed seed_id as it's now handled by the associative table
-    plant_type: str
-    species: str
-    variety: str
     germination_date: date
     hydroponic_system_id: int
+    seed_id: int
     comments: Optional[str] = None
 
 
@@ -76,6 +74,8 @@ class HydroponicSystem(BaseModel):
 class Seed(BaseModel):
     seed_id: Optional[int] = None
     number_of_seeds: int
+    species: str
+    variety: str
     # Removed cross_id; relationship is managed by SeedCross model
     comments: Optional[str] = None
 

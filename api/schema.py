@@ -77,10 +77,9 @@ class Plant(Base):
     plant_id = Column(Integer, primary_key=True, autoincrement=True)
     # The seed_id foreign key is removed to avoid a direct link to the seeds table
     plant_type = Column(String(255))
-    species = Column(String(255))
-    variety = Column(String(255))
     germination_date = Column(Date)
     hydroponic_system_id = Column(Integer, ForeignKey('hydroponic_system.system_id'))
+    seed_id = Column(Integer, ForeignKey('seeds.seed_id'))
     comments = Column(Text)
 
     # Relationships
@@ -102,6 +101,8 @@ class HydroponicSystem(Base):
 class Seed(Base):
     __tablename__ = 'seeds'
     seed_id = Column(Integer, primary_key=True, autoincrement=True)
+    species = Column(String(255))
+    variety = Column(String(255))
     number_of_seeds = Column(Integer)
     comments = Column(Text)
 

@@ -1,0 +1,111 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  pepper-pod-pal
+
+  Sample SAM Template for pepper-pod-pal
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+    MemorySize: 128
+
+    Tracing: Active
+  Api:
+    TracingEnabled: true
+
+Parameters:
+  DbPassword:
+    Type: String
+  DbHost:
+    Type: String
+    Default: plantsdb.cp4pnzol4blt.us-east-2.rds.amazonaws.com
+  # ImageUri:
+  #   Type: String
+  #   Default: 856608212549.dkr.ecr.us-east-2.amazonaws.com/plant-api:latest
+
+Resources:
+  # Define the Aurora DB instance within the cluster
+  PlantsDBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceClass: db.t2.micro # Choose an instance size appropriate for your needs
+      AllocatedStorage: 20
+      Engine: MySql
+      MasterUsername: bscholer
+      MasterUserPassword: !Ref DbPassword
+      BackupRetentionPeriod: 7
+      DBInstanceIdentifier: plantsdb
+      PubliclyAccessible: true
+      MultiAZ: false
+      VPCSecurityGroups:
+        - !Ref PlantsDBSecurityGroup
+
+  PlantsApiFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: api
+      Handler: main.app
+      Runtime: python3.8
+      MemorySize: 1024
+      Timeout: 30
+      Environment:
+        Variables:
+          DB_HOST: !Ref DbHost
+          DB_NAME: plants
+          DB_USER: bscholer
+          DB_PASSWORD: !Ref DbPassword
+      Events:
+        ApiEvent:
+          Type: HttpApi # Using HTTP API Gateway
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+
+  PlantsDBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group for RDS instance
+      VpcId: vpc-028c3496e13f72931
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: 0.0.0.0/0 # CAUTION: This allows access from anywhere; replace with your IP range for better security.
+
+  PlantsDBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet Group for RDS instance
+      SubnetIds:
+        - subnet-0a30b44d7751634e7
+        - subnet-0eecad349c2b65f7e
+        - subnet-01125b4201472f22c
+
+  ApplicationResourceGroup:
+    Type: AWS::ResourceGroups::Group
+    Properties:
+      Name:
+        Fn::Sub: ApplicationInsights-SAM-${AWS::StackName}
+      ResourceQuery:
+        Type: CLOUDFORMATION_STACK_1_0
+  ApplicationInsightsMonitoring:
+    Type: AWS::ApplicationInsights::Application
+    Properties:
+      ResourceGroupName:
+        Ref: ApplicationResourceGroup
+      AutoConfigurationEnabled: "true"
+
+Outputs:
+  RDSInstanceEndpoint:
+    Description: "The endpoint of the RDS instance"
+    Value: !GetAtt PlantsDBInstance.Endpoint.Address
+
+  RDSSecurityGroup:
+    Description: "The Security Group ID of the RDS instance"
+    Value: !Ref PlantsDBSecurityGroup
+
+  PlantsApi:
+    Description: "API Gateway endpoint URL for Prod environment"
+    Value: !Sub "https://${PlantsApiFunction}.execute-api.${AWS::Region}.amazonaws.com/"

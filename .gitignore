@@ -16,6 +16,9 @@
 # .nfs files are created when an open file is removed but is still being accessed
 .nfs*
 
+*.aws-sam*
+.idea*
+
 ### OSX ###
 *.DS_Store
 .AppleDouble

@@ -21,9 +21,8 @@ Parameters:
   DbHost:
     Type: String
     Default: plantsdb.cp4pnzol4blt.us-east-2.rds.amazonaws.com
-  # ImageUri:
-  #   Type: String
-  #   Default: 856608212549.dkr.ecr.us-east-2.amazonaws.com/plant-api:latest
+  ApiKey:
+    Type: String
 
 Resources:
   # Define the Aurora DB instance within the cluster
@@ -46,22 +45,23 @@ Resources:
     Type: AWS::Serverless::Function 
     Properties:
       CodeUri: api
-      Handler: main.app
-      Runtime: python3.8
+      Handler: main.handler
+      Runtime: python3.11
       MemorySize: 1024
       Timeout: 30
+      Events:
+        ApiEvent:
+          Type: HttpApi # Using http API Gateway
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
       Environment:
         Variables:
           DB_HOST: !Ref DbHost
           DB_NAME: plants
           DB_USER: bscholer
           DB_PASSWORD: !Ref DbPassword
-      Events:
-        ApiEvent:
-          Type: HttpApi # Using HTTP API Gateway
-          Properties:
-            Path: /{proxy+}
-            Method: ANY
+          API_KEY: !Ref ApiKey
 
   PlantsDBSecurityGroup:
     Type: AWS::EC2::SecurityGroup

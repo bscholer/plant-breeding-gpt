@@ -1,2 +1,7 @@
-sqlalchemy
+fastapi
 pymysql
+python-dotenv
+sqlalchemy
+databases
+aiomysql
+mangum

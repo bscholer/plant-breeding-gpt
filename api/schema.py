@@ -55,11 +55,8 @@ class Yield(Base):
     yield_id = Column(Integer, primary_key=True, autoincrement=True)
     plant_id = Column(Integer, ForeignKey('plants.plant_id'))
     date = Column(Date)
-    height_cm = Column(DECIMAL(5, 2))
-    leaf_count = Column(Integer)
     color = Column(String(255))
     texture = Column(String(255))
-    nutrient_level = Column(Integer)
     photo = Column(BLOB)
     notes = Column(Text)
 
@@ -69,6 +66,11 @@ class Observation(Base):
     observation_id = Column(Integer, primary_key=True, autoincrement=True)
     plant_id = Column(Integer, ForeignKey('plants.plant_id'))
     date = Column(Date)
+    height_cm = Column(DECIMAL(5, 2))
+    leaf_count = Column(Integer)
+    color = Column(String(255))
+    texture = Column(String(255))
+    # photo = Column(BLOB)
     comments = Column(Text, nullable=True)
 
 

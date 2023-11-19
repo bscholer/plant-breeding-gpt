@@ -77,8 +77,6 @@ class Observation(Base):
 class Plant(Base):
     __tablename__ = 'plants'
     plant_id = Column(Integer, primary_key=True, autoincrement=True)
-    # The seed_id foreign key is removed to avoid a direct link to the seeds table
-    plant_type = Column(String(255))
     germination_date = Column(Date)
     hydroponic_system_id = Column(Integer, ForeignKey('hydroponic_system.system_id'))
     seed_id = Column(Integer, ForeignKey('seeds.seed_id'))

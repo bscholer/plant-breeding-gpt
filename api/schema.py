@@ -5,12 +5,49 @@ from sqlalchemy.orm import relationship
 Base = declarative_base()
 
 
-# Associative table for seeds and plant crosses
-class SeedCross(Base):
-    __tablename__ = 'seed_cross'
-    id = Column(Integer, primary_key=True, autoincrement=True)
+class Seed(Base):
+    __tablename__ = 'seeds'
+    seed_id = Column(Integer, primary_key=True, autoincrement=True)
+    yield_id = Column(Integer, ForeignKey('yield.yield_id'), nullable=True)
+    species = Column(String(255))
+    variety = Column(String(255))
+    number_of_seeds = Column(Integer)
+    comments = Column(Text)
+
+
+class Germination(Base):
+    __tablename__ = 'germination'
+    germination_id = Column(Integer, primary_key=True, autoincrement=True)
     seed_id = Column(Integer, ForeignKey('seeds.seed_id'))
-    cross_id = Column(Integer, ForeignKey('plant_crosses.cross_id'))
+    planted_date = Column(Date)
+    germination_date = Column(Date, nullable=True)
+    seeds_attempted = Column(Integer)
+    seeds_successful = Column(Integer, nullable=True)
+    method = Column(String(255))
+    comments = Column(Text, nullable=True)
+
+
+class Plant(Base):
+    __tablename__ = 'plants'
+    plant_id = Column(Integer, primary_key=True, autoincrement=True)
+    germination_id = Column(Integer, ForeignKey('germination.germination_id'))
+    system_id = Column(Integer, ForeignKey('hydroponic_system.system_id'), nullable=True)
+    comments = Column(Text, nullable=True)
+
+    # Relationships
+    plants = relationship("PlantPlantCross", back_populates="plant")
+
+
+class Yield(Base):
+    __tablename__ = 'yield'
+    yield_id = Column(Integer, primary_key=True, autoincrement=True)
+    plant_id = Column(Integer, ForeignKey('plants.plant_id'))
+    cross_id = Column(Integer, ForeignKey('plant_crosses.cross_id'), nullable=True)
+    date = Column(Date)
+    color = Column(String(255))
+    texture = Column(String(255))
+    # photo = Column(BLOB, nullable=True)
+    notes = Column(Text, nullable=True)
 
 
 class PlantCross(Base):
@@ -20,22 +57,20 @@ class PlantCross(Base):
     parent_2_id = Column(Integer, ForeignKey('plants.plant_id'))
     cross_date = Column(Date)
     method = Column(String(255))
-    comments = Column(Text)
+    comments = Column(Text, nullable=True)
 
     # Relationship to the associative table
-    seeds = relationship('SeedCross', back_populates='cross')
+    plants = relationship("PlantPlantCross", back_populates="cross")
 
 
-class HydroponicCondition(Base):
-    __tablename__ = 'hydroponic_conditions'
-    condition_id = Column(Integer, primary_key=True, autoincrement=True)
-    system_id = Column(Integer, ForeignKey('hydroponic_system.system_id'))
-    date = Column(Date)
-    water_ph = Column(DECIMAL(3, 2))
-    electrical_conductivity = Column(DECIMAL(5, 2))
-    water_temperature_f = Column(Integer)
-    tds = Column(DECIMAL(5, 2))
-    comments = Column(Text, nullable=True)
+class PlantPlantCross(Base):
+    __tablename__ = 'plant_plant_cross'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    plant_id = Column(Integer, ForeignKey('plants.plant_id'))
+    cross_id = Column(Integer, ForeignKey('plant_crosses.cross_id'))
+
+    plant = relationship('Plant', back_populates='plant_crosses')
+    cross = relationship('PlantCross', back_populates='plants')
 
 
 class TasteTest(Base):
@@ -50,41 +85,17 @@ class TasteTest(Base):
     comments = Column(Text, nullable=True)
 
 
-class Yield(Base):
-    __tablename__ = 'yield'
-    yield_id = Column(Integer, primary_key=True, autoincrement=True)
-    plant_id = Column(Integer, ForeignKey('plants.plant_id'))
-    date = Column(Date)
-    color = Column(String(255))
-    texture = Column(String(255))
-    photo = Column(BLOB)
-    notes = Column(Text)
-
-
 class Observation(Base):
     __tablename__ = 'observations'
     observation_id = Column(Integer, primary_key=True, autoincrement=True)
     plant_id = Column(Integer, ForeignKey('plants.plant_id'))
     date = Column(Date)
-    height_cm = Column(DECIMAL(5, 2))
-    leaf_count = Column(Integer)
+    height_cm = Column(DECIMAL(5, 2), nullable=True)
+    leaf_count = Column(Integer, nullable=True)
     color = Column(String(255))
     texture = Column(String(255))
     # photo = Column(BLOB)
     comments = Column(Text, nullable=True)
-
-
-class Plant(Base):
-    __tablename__ = 'plants'
-    plant_id = Column(Integer, primary_key=True, autoincrement=True)
-    germination_date = Column(Date)
-    hydroponic_system_id = Column(Integer, ForeignKey('hydroponic_system.system_id'))
-    seed_id = Column(Integer, ForeignKey('seeds.seed_id'))
-    comments = Column(Text)
-
-    # Relationships
-    plant_crosses_as_parent1 = relationship('PlantCross', foreign_keys=[PlantCross.parent_1_id])
-    plant_crosses_as_parent2 = relationship('PlantCross', foreign_keys=[PlantCross.parent_2_id])
 
 
 class HydroponicSystem(Base):
@@ -98,21 +109,20 @@ class HydroponicSystem(Base):
     plants = relationship("Plant")
 
 
-class Seed(Base):
-    __tablename__ = 'seeds'
-    seed_id = Column(Integer, primary_key=True, autoincrement=True)
-    species = Column(String(255))
-    variety = Column(String(255))
-    number_of_seeds = Column(Integer)
-    comments = Column(Text)
+class HydroponicCondition(Base):
+    __tablename__ = 'hydroponic_conditions'
+    condition_id = Column(Integer, primary_key=True, autoincrement=True)
+    system_id = Column(Integer, ForeignKey('hydroponic_system.system_id'))
+    date = Column(Date)
+    water_ph = Column(DECIMAL(3, 2), nullable=True)
+    electrical_conductivity = Column(DECIMAL(5, 2), nullable=True)
+    water_temperature_f = Column(Integer, nullable=True)
+    comments = Column(Text, nullable=True)
 
-    # Relationship to the associative table
-    crosses = relationship('SeedCross', back_populates='seed')
 
-
-# Define back_populates for relationships in associative table
-SeedCross.cross = relationship('PlantCross', back_populates='seeds')
-SeedCross.seed = relationship('Seed', back_populates='crosses')
+# necessary for the association table
+Plant.plant_crosses = relationship("PlantPlantCross", order_by=PlantPlantCross.id, back_populates="plant")
+PlantCross.plants = relationship("PlantPlantCross", order_by=PlantPlantCross.id, back_populates="cross")
 
 # create an engine that stores data in the local directory's
 # sqlalchemy_example.db file.

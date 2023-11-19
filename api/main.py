@@ -81,6 +81,240 @@ async def run_select_query(query: str, db: Session = Depends(get_db), api_key: s
         raise HTTPException(status_code=400, detail=str(e))
 
 
+# CREATE a new seed
+@app.post("/seeds/", response_model=models.Seed, status_code=status.HTTP_201_CREATED)
+def create_seed(seed: models.Seed, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    db_seed = schema.Seed(**seed.dict())
+    db.add(db_seed)
+    db.commit()
+    db.refresh(db_seed)
+    return db_seed
+
+
+# CREATE many new seeds
+@app.post("/seeds/bulk", response_model=List[models.Seed], status_code=status.HTTP_201_CREATED)
+def create_seeds(seeds: List[models.Seed], db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    db_seeds = [schema.Seed(**seed.dict()) for seed in seeds]
+    db.add_all(db_seeds)
+    db.commit()
+    return db_seeds
+
+
+# READ all seeds
+@app.get("/seeds/", response_model=List[models.Seed])
+def read_seeds(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    return db.query(schema.Seed).all()
+
+
+# READ a single seed by ID
+@app.get("/seeds/{seed_id}", response_model=models.Seed)
+def read_seed(seed_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    seed = db.query(schema.Seed).filter(schema.Seed.seed_id == seed_id).first()
+    if seed is None:
+        raise HTTPException(status_code=404, detail="Seed not found")
+    return seed
+
+
+# UPDATE a seed by ID
+@app.put("/seeds/{seed_id}", response_model=models.Seed)
+def update_seed(seed_id: int, update_data: models.Seed, db: Session = Depends(get_db),
+                api_key: str = Depends(get_api_key)):
+    seed = db.query(schema.Seed).filter(schema.Seed.seed_id == seed_id).first()
+    if seed is None:
+        raise HTTPException(status_code=404, detail="Seed not found")
+    for key, value in update_data.dict().items():
+        setattr(seed, key, value)
+    db.commit()
+    return seed
+
+
+# DELETE a seed by ID
+@app.delete("/seeds/{seed_id}", response_model=models.Seed)
+def delete_seed(seed_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    seed = db.query(schema.Seed).filter(schema.Seed.seed_id == seed_id).first()
+    if seed is None:
+        raise HTTPException(status_code=404, detail="Seed not found")
+    db.delete(seed)
+    db.commit()
+    return seed
+
+
+# CREATE a new germination
+@app.post("/germinations/", response_model=models.Germination, status_code=status.HTTP_201_CREATED)
+def create_germination(germination: models.Germination, db: Session = Depends(get_db),
+                       api_key: str = Depends(get_api_key)):
+    db_germination = schema.Germination(**germination.dict())
+    db.add(db_germination)
+    db.commit()
+    db.refresh(db_germination)
+    return db_germination
+
+
+# CREATE many new germinations
+@app.post("/germinations/bulk", response_model=List[models.Germination], status_code=status.HTTP_201_CREATED)
+def create_germinations(germinations: List[models.Germination], db: Session = Depends(get_db),
+                        api_key: str = Depends(get_api_key)):
+    db_germinations = [schema.Germination(**germination.dict()) for germination in germinations]
+    db.add_all(db_germinations)
+    db.commit()
+    return db_germinations
+
+
+# READ all germinations
+@app.get("/germinations/", response_model=List[models.Germination])
+def read_germinations(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    return db.query(schema.Germination).all()
+
+
+# READ a single germination by ID
+@app.get("/germinations/{germination_id}", response_model=models.Germination)
+def read_germination(germination_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    germination = db.query(schema.Germination).filter(schema.Germination.germination_id == germination_id).first()
+    if germination is None:
+        raise HTTPException(status_code=404, detail="Germination not found")
+    return germination
+
+
+# UPDATE a germination by ID
+@app.put("/germinations/{germination_id}", response_model=models.Germination)
+def update_germination(germination_id: int, update_data: models.Germination, db: Session = Depends(get_db),
+                       api_key: str = Depends(get_api_key)):
+    germination = db.query(schema.Germination).filter(schema.Germination.germination_id == germination_id).first()
+    if germination is None:
+        raise HTTPException(status_code=404, detail="Germination not found")
+    for key, value in update_data.dict().items():
+        setattr(germination, key, value)
+    db.commit()
+    return germination
+
+
+# DELETE a germination by ID
+@app.delete("/germinations/{germination_id}", response_model=models.Germination)
+def delete_germination(germination_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    germination = db.query(schema.Germination).filter(schema.Germination.germination_id == germination_id).first()
+    if germination is None:
+        raise HTTPException(status_code=404, detail="Germination not found")
+    db.delete(germination)
+    db.commit()
+    return germination
+
+
+# CREATE a new plant
+@app.post("/plants/", response_model=models.Plant, status_code=status.HTTP_201_CREATED)
+def create_plant(plant: models.Plant, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    db_plant = schema.Plant(**plant.dict())
+    db.add(db_plant)
+    db.commit()
+    db.refresh(db_plant)
+    return db_plant
+
+
+# CREATE many new plants
+@app.post("/plants/bulk", response_model=List[models.Plant], status_code=status.HTTP_201_CREATED)
+def create_plants(plants: List[models.Plant], db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    db_plants = [schema.Plant(**plant.dict()) for plant in plants]
+    db.add_all(db_plants)
+    db.commit()
+    return db_plants
+
+
+# READ all plants
+@app.get("/plants/", response_model=List[models.Plant])
+def read_plants(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    return db.query(schema.Plant).all()
+
+
+# READ a single plant by ID
+@app.get("/plants/{plant_id}", response_model=models.Plant)
+def read_plant(plant_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    plant = db.query(schema.Plant).filter(schema.Plant.plant_id == plant_id).first()
+    if plant is None:
+        raise HTTPException(status_code=404, detail="Plant not found")
+    return plant
+
+
+# UPDATE a plant by ID
+@app.put("/plants/{plant_id}", response_model=models.Plant)
+def update_plant(plant_id: int, update_data: models.Plant, db: Session = Depends(get_db),
+                 api_key: str = Depends(get_api_key)):
+    plant = db.query(schema.Plant).filter(schema.Plant.plant_id == plant_id).first()
+    if plant is None:
+        raise HTTPException(status_code=404, detail="Plant not found")
+    for key, value in update_data.dict().items():
+        setattr(plant, key, value)
+    db.commit()
+    return plant
+
+
+# DELETE a plant by ID
+@app.delete("/plants/{plant_id}", response_model=models.Plant)
+def delete_plant(plant_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    plant = db.query(schema.Plant).filter(schema.Plant.plant_id == plant_id).first()
+    if plant is None:
+        raise HTTPException(status_code=404, detail="Plant not found")
+    db.delete(plant)
+    db.commit()
+    return plant
+
+
+# CREATE a new yield
+@app.post("/yields/", response_model=models.Yield, status_code=status.HTTP_201_CREATED)
+def create_yield(yield_: models.Yield, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    db_yield = schema.Yield(**yield_.dict())
+    db.add(db_yield)
+    db.commit()
+    db.refresh(db_yield)
+    return db_yield
+
+
+# CREATE many new yields
+@app.post("/yields/bulk", response_model=List[models.Yield], status_code=status.HTTP_201_CREATED)
+def create_yields(yields: List[models.Yield], db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    db_yields = [schema.Yield(**yield_.dict()) for yield_ in yields]
+    db.add_all(db_yields)
+    db.commit()
+    return db_yields
+
+
+# READ all yields
+@app.get("/yields/", response_model=List[models.Yield])
+def read_yields(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    return db.query(schema.Yield).all()
+
+
+# READ a single yield by ID
+@app.get("/yields/{yield_id}", response_model=models.Yield)
+def read_yield(yield_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    yield_ = db.query(schema.Yield).filter(schema.Yield.yield_id == yield_id).first()
+    if yield_ is None:
+        raise HTTPException(status_code=404, detail="Yield not found")
+    return yield_
+
+
+# UPDATE a yield by ID
+@app.put("/yields/{yield_id}", response_model=models.Yield)
+def update_yield(yield_id: int, update_data: models.Yield, db: Session = Depends(get_db),
+                 api_key: str = Depends(get_api_key)):
+    yield_ = db.query(schema.Yield).filter(schema.Yield.yield_id == yield_id).first()
+    if yield_ is None:
+        raise HTTPException(status_code=404, detail="Yield not found")
+    for key, value in update_data.dict().items():
+        setattr(yield_, key, value)
+    db.commit()
+    return yield_
+
+
+# DELETE a yield by ID
+@app.delete("/yields/{yield_id}", response_model=models.Yield)
+def delete_yield(yield_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    yield_ = db.query(schema.Yield).filter(schema.Yield.yield_id == yield_id).first()
+    if yield_ is None:
+        raise HTTPException(status_code=404, detail="Yield not found")
+    db.delete(yield_)
+    db.commit()
+    return yield_
+
+
 # CREATE a new plant_cross
 @app.post("/plant_crosses/", response_model=models.PlantCross, status_code=status.HTTP_201_CREATED)
 def create_plant_cross(plant_cross: models.PlantCross, db: Session = Depends(get_db),
@@ -141,69 +375,66 @@ def delete_plant_cross(cross_id: int, db: Session = Depends(get_db), api_key: st
     return plant_cross
 
 
-# CREATE a new hydroponic_condition
-@app.post("/hydroponic_conditions/", response_model=models.HydroponicCondition, status_code=status.HTTP_201_CREATED)
-def create_hydroponic_condition(hydroponic_condition: models.HydroponicCondition, db: Session = Depends(get_db),
-                                api_key: str = Depends(get_api_key)):
-    db_hydroponic_condition = schema.HydroponicCondition(**hydroponic_condition.dict())
-    db.add(db_hydroponic_condition)
+# CREATE a new plant_plant_cross
+@app.post("/plant_plant_crosses/", response_model=models.PlantPlantCross, status_code=status.HTTP_201_CREATED)
+def create_plant_plant_cross(plant_plant_cross: models.PlantPlantCross, db: Session = Depends(get_db),
+                             api_key: str = Depends(get_api_key)):
+    db_plant_plant_cross = schema.PlantPlantCross(**plant_plant_cross.dict())
+    db.add(db_plant_plant_cross)
     db.commit()
-    db.refresh(db_hydroponic_condition)
-    return db_hydroponic_condition
+    db.refresh(db_plant_plant_cross)
+    return db_plant_plant_cross
 
 
-# CREATE many new hydroponic_conditions
-@app.post("/hydroponic_conditions/bulk", response_model=List[models.HydroponicCondition],
+# CREATE many new plant_plant_crosses
+@app.post("/plant_plant_crosses/bulk", response_model=List[models.PlantPlantCross],
           status_code=status.HTTP_201_CREATED)
-def create_hydroponic_conditions(hydroponic_conditions: List[models.HydroponicCondition], db: Session = Depends(get_db),
-                                 api_key: str = Depends(get_api_key)):
-    db_hydroponic_conditions = [schema.HydroponicCondition(**hydroponic_condition.dict()) for hydroponic_condition in
-                                hydroponic_conditions]
-    db.add_all(db_hydroponic_conditions)
+def create_plant_plant_crosses(plant_plant_crosses: List[models.PlantPlantCross], db: Session = Depends(get_db),
+                               api_key: str = Depends(get_api_key)):
+    db_plant_plant_crosses = [schema.PlantPlantCross(**plant_plant_cross.dict()) for plant_plant_cross in
+                              plant_plant_crosses]
+    db.add_all(db_plant_plant_crosses)
     db.commit()
-    return db_hydroponic_conditions
+    return db_plant_plant_crosses
 
 
-# READ all hydroponic_conditions
-@app.get("/hydroponic_conditions/", response_model=List[models.HydroponicCondition])
-def read_hydroponic_conditions(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    return db.query(schema.HydroponicCondition).all()
+# READ all plant_plant_crosses
+@app.get("/plant_plant_crosses/", response_model=List[models.PlantPlantCross])
+def read_plant_plant_crosses(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    return db.query(schema.PlantPlantCross).all()
 
 
-# READ a single hydroponic_condition by ID
-@app.get("/hydroponic_conditions/{condition_id}", response_model=models.HydroponicCondition)
-def read_hydroponic_condition(condition_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    hydroponic_condition = db.query(schema.HydroponicCondition).filter(
-        schema.HydroponicCondition.condition_id == condition_id).first()
-    if hydroponic_condition is None:
-        raise HTTPException(status_code=404, detail="HydroponicCondition not found")
-    return hydroponic_condition
+# READ a single plant_plant_cross by ID
+@app.get("/plant_plant_crosses/{id}", response_model=models.PlantPlantCross)
+def read_plant_plant_cross(id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    plant_plant_cross = db.query(schema.PlantPlantCross).filter(schema.PlantPlantCross.id == id).first()
+    if plant_plant_cross is None:
+        raise HTTPException(status_code=404, detail="PlantPlantCross not found")
+    return plant_plant_cross
 
 
-# UPDATE a hydroponic_condition by ID
-@app.put("/hydroponic_conditions/{condition_id}", response_model=models.HydroponicCondition)
-def update_hydroponic_condition(condition_id: int, update_data: models.HydroponicCondition,
-                                db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    hydroponic_condition = db.query(schema.HydroponicCondition).filter(
-        schema.HydroponicCondition.condition_id == condition_id).first()
-    if hydroponic_condition is None:
-        raise HTTPException(status_code=404, detail="HydroponicCondition not found")
+# UPDATE a plant_plant_cross by ID
+@app.put("/plant_plant_crosses/{id}", response_model=models.PlantPlantCross)
+def update_plant_plant_cross(id: int, update_data: models.PlantPlantCross, db: Session = Depends(get_db),
+                             api_key: str = Depends(get_api_key)):
+    plant_plant_cross = db.query(schema.PlantPlantCross).filter(schema.PlantPlantCross.id == id).first()
+    if plant_plant_cross is None:
+        raise HTTPException(status_code=404, detail="PlantPlantCross not found")
     for key, value in update_data.dict().items():
-        setattr(hydroponic_condition, key, value)
+        setattr(plant_plant_cross, key, value)
     db.commit()
-    return hydroponic_condition
+    return plant_plant_cross
 
 
-# DELETE a hydroponic_condition by ID
-@app.delete("/hydroponic_conditions/{condition_id}", response_model=models.HydroponicCondition)
-def delete_hydroponic_condition(condition_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    hydroponic_condition = db.query(schema.HydroponicCondition).filter(
-        schema.HydroponicCondition.condition_id == condition_id).first()
-    if hydroponic_condition is None:
-        raise HTTPException(status_code=404, detail="HydroponicCondition not found")
-    db.delete(hydroponic_condition)
+# DELETE a plant_plant_cross by ID
+@app.delete("/plant_plant_crosses/{id}", response_model=models.PlantPlantCross)
+def delete_plant_plant_cross(id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    plant_plant_cross = db.query(schema.PlantPlantCross).filter(schema.PlantPlantCross.id == id).first()
+    if plant_plant_cross is None:
+        raise HTTPException(status_code=404, detail="PlantPlantCross not found")
+    db.delete(plant_plant_cross)
     db.commit()
-    return hydroponic_condition
+    return plant_plant_cross
 
 
 # CREATE a new taste_test
@@ -265,64 +496,6 @@ def delete_taste_test(taste_test_id: int, db: Session = Depends(get_db), api_key
     return taste_test
 
 
-# CREATE a new yield
-@app.post("/yields/", response_model=models.Yield, status_code=status.HTTP_201_CREATED)
-def create_yield(yield_: models.Yield, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    db_yield = schema.Yield(**yield_.dict())
-    db.add(db_yield)
-    db.commit()
-    db.refresh(db_yield)
-    return db_yield
-
-
-# CREATE many new yields
-@app.post("/yields/bulk", response_model=List[models.Yield], status_code=status.HTTP_201_CREATED)
-def create_yields(yields: List[models.Yield], db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    db_yields = [schema.Yield(**yield_.dict()) for yield_ in yields]
-    db.add_all(db_yields)
-    db.commit()
-    return db_yields
-
-
-# READ all yields
-@app.get("/yields/", response_model=List[models.Yield])
-def read_yields(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    return db.query(schema.Yield).all()
-
-
-# READ a single yield by ID
-@app.get("/yields/{yield_id}", response_model=models.Yield)
-def read_yield(yield_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    yield_ = db.query(schema.Yield).filter(schema.Yield.yield_id == yield_id).first()
-    if yield_ is None:
-        raise HTTPException(status_code=404, detail="Yield not found")
-    return yield_
-
-
-# UPDATE a yield by ID
-@app.put("/yields/{yield_id}", response_model=models.Yield)
-def update_yield(yield_id: int, update_data: models.Yield, db: Session = Depends(get_db),
-                 api_key: str = Depends(get_api_key)):
-    yield_ = db.query(schema.Yield).filter(schema.Yield.yield_id == yield_id).first()
-    if yield_ is None:
-        raise HTTPException(status_code=404, detail="Yield not found")
-    for key, value in update_data.dict().items():
-        setattr(yield_, key, value)
-    db.commit()
-    return yield_
-
-
-# DELETE a yield by ID
-@app.delete("/yields/{yield_id}", response_model=models.Yield)
-def delete_yield(yield_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    yield_ = db.query(schema.Yield).filter(schema.Yield.yield_id == yield_id).first()
-    if yield_ is None:
-        raise HTTPException(status_code=404, detail="Yield not found")
-    db.delete(yield_)
-    db.commit()
-    return yield_
-
-
 # CREATE a new observation
 @app.post("/observations/", response_model=models.Observation, status_code=status.HTTP_201_CREATED)
 def create_observation(observation: models.Observation, db: Session = Depends(get_db),
@@ -381,64 +554,6 @@ def delete_observation(observation_id: int, db: Session = Depends(get_db), api_k
     db.delete(observation)
     db.commit()
     return observation
-
-
-# CREATE a new plant
-@app.post("/plants/", response_model=models.Plant, status_code=status.HTTP_201_CREATED)
-def create_plant(plant: models.Plant, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    db_plant = schema.Plant(**plant.dict())
-    db.add(db_plant)
-    db.commit()
-    db.refresh(db_plant)
-    return db_plant
-
-
-# CREATE many new plants
-@app.post("/plants/bulk", response_model=List[models.Plant], status_code=status.HTTP_201_CREATED)
-def create_plants(plants: List[models.Plant], db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    db_plants = [schema.Plant(**plant.dict()) for plant in plants]
-    db.add_all(db_plants)
-    db.commit()
-    return db_plants
-
-
-# READ all plants
-@app.get("/plants/", response_model=List[models.Plant])
-def read_plants(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    return db.query(schema.Plant).all()
-
-
-# READ a single plant by ID
-@app.get("/plants/{plant_id}", response_model=models.Plant)
-def read_plant(plant_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    plant = db.query(schema.Plant).filter(schema.Plant.plant_id == plant_id).first()
-    if plant is None:
-        raise HTTPException(status_code=404, detail="Plant not found")
-    return plant
-
-
-# UPDATE a plant by ID
-@app.put("/plants/{plant_id}", response_model=models.Plant)
-def update_plant(plant_id: int, update_data: models.Plant, db: Session = Depends(get_db),
-                 api_key: str = Depends(get_api_key)):
-    plant = db.query(schema.Plant).filter(schema.Plant.plant_id == plant_id).first()
-    if plant is None:
-        raise HTTPException(status_code=404, detail="Plant not found")
-    for key, value in update_data.dict().items():
-        setattr(plant, key, value)
-    db.commit()
-    return plant
-
-
-# DELETE a plant by ID
-@app.delete("/plants/{plant_id}", response_model=models.Plant)
-def delete_plant(plant_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    plant = db.query(schema.Plant).filter(schema.Plant.plant_id == plant_id).first()
-    if plant is None:
-        raise HTTPException(status_code=404, detail="Plant not found")
-    db.delete(plant)
-    db.commit()
-    return plant
 
 
 # CREATE a new hydroponic_system
@@ -506,121 +621,69 @@ def delete_hydroponic_system(system_id: int, db: Session = Depends(get_db), api_
     return hydroponic_system
 
 
-# CREATE a new seed
-@app.post("/seeds/", response_model=models.Seed, status_code=status.HTTP_201_CREATED)
-def create_seed(seed: models.Seed, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    db_seed = schema.Seed(**seed.dict())
-    db.add(db_seed)
+# CREATE a new hydroponic_condition
+@app.post("/hydroponic_conditions/", response_model=models.HydroponicCondition, status_code=status.HTTP_201_CREATED)
+def create_hydroponic_condition(hydroponic_condition: models.HydroponicCondition, db: Session = Depends(get_db),
+                                api_key: str = Depends(get_api_key)):
+    db_hydroponic_condition = schema.HydroponicCondition(**hydroponic_condition.dict())
+    db.add(db_hydroponic_condition)
     db.commit()
-    db.refresh(db_seed)
-    return db_seed
+    db.refresh(db_hydroponic_condition)
+    return db_hydroponic_condition
 
 
-# CREATE many new seeds
-@app.post("/seeds/bulk", response_model=List[models.Seed], status_code=status.HTTP_201_CREATED)
-def create_seeds(seeds: List[models.Seed], db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    db_seeds = [schema.Seed(**seed.dict()) for seed in seeds]
-    db.add_all(db_seeds)
+# CREATE many new hydroponic_conditions
+@app.post("/hydroponic_conditions/bulk", response_model=List[models.HydroponicCondition],
+          status_code=status.HTTP_201_CREATED)
+def create_hydroponic_conditions(hydroponic_conditions: List[models.HydroponicCondition], db: Session = Depends(get_db),
+                                 api_key: str = Depends(get_api_key)):
+    db_hydroponic_conditions = [schema.HydroponicCondition(**hydroponic_condition.dict()) for hydroponic_condition in
+                                hydroponic_conditions]
+    db.add_all(db_hydroponic_conditions)
     db.commit()
-    return db_seeds
+    return db_hydroponic_conditions
 
 
-# READ all seeds
-@app.get("/seeds/", response_model=List[models.Seed])
-def read_seeds(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    return db.query(schema.Seed).all()
+# READ all hydroponic_conditions
+@app.get("/hydroponic_conditions/", response_model=List[models.HydroponicCondition])
+def read_hydroponic_conditions(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    return db.query(schema.HydroponicCondition).all()
 
 
-# READ a single seed by ID
-@app.get("/seeds/{seed_id}", response_model=models.Seed)
-def read_seed(seed_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    seed = db.query(schema.Seed).filter(schema.Seed.seed_id == seed_id).first()
-    if seed is None:
-        raise HTTPException(status_code=404, detail="Seed not found")
-    return seed
+# READ a single hydroponic_condition by ID
+@app.get("/hydroponic_conditions/{condition_id}", response_model=models.HydroponicCondition)
+def read_hydroponic_condition(condition_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    hydroponic_condition = db.query(schema.HydroponicCondition).filter(
+        schema.HydroponicCondition.condition_id == condition_id).first()
+    if hydroponic_condition is None:
+        raise HTTPException(status_code=404, detail="HydroponicCondition not found")
+    return hydroponic_condition
 
 
-# UPDATE a seed by ID
-@app.put("/seeds/{seed_id}", response_model=models.Seed)
-def update_seed(seed_id: int, update_data: models.Seed, db: Session = Depends(get_db),
-                api_key: str = Depends(get_api_key)):
-    seed = db.query(schema.Seed).filter(schema.Seed.seed_id == seed_id).first()
-    if seed is None:
-        raise HTTPException(status_code=404, detail="Seed not found")
+# UPDATE a hydroponic_condition by ID
+@app.put("/hydroponic_conditions/{condition_id}", response_model=models.HydroponicCondition)
+def update_hydroponic_condition(condition_id: int, update_data: models.HydroponicCondition,
+                                db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    hydroponic_condition = db.query(schema.HydroponicCondition).filter(
+        schema.HydroponicCondition.condition_id == condition_id).first()
+    if hydroponic_condition is None:
+        raise HTTPException(status_code=404, detail="HydroponicCondition not found")
     for key, value in update_data.dict().items():
-        setattr(seed, key, value)
+        setattr(hydroponic_condition, key, value)
     db.commit()
-    return seed
+    return hydroponic_condition
 
 
-# DELETE a seed by ID
-@app.delete("/seeds/{seed_id}", response_model=models.Seed)
-def delete_seed(seed_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    seed = db.query(schema.Seed).filter(schema.Seed.seed_id == seed_id).first()
-    if seed is None:
-        raise HTTPException(status_code=404, detail="Seed not found")
-    db.delete(seed)
+# DELETE a hydroponic_condition by ID
+@app.delete("/hydroponic_conditions/{condition_id}", response_model=models.HydroponicCondition)
+def delete_hydroponic_condition(condition_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    hydroponic_condition = db.query(schema.HydroponicCondition).filter(
+        schema.HydroponicCondition.condition_id == condition_id).first()
+    if hydroponic_condition is None:
+        raise HTTPException(status_code=404, detail="HydroponicCondition not found")
+    db.delete(hydroponic_condition)
     db.commit()
-    return seed
-
-
-# CREATE a new seed_cross
-@app.post("/seed_crosses/", response_model=models.SeedCross, status_code=status.HTTP_201_CREATED)
-def create_seed_cross(seed_cross: models.SeedCross, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    db_seed_cross = schema.SeedCross(**seed_cross.dict())
-    db.add(db_seed_cross)
-    db.commit()
-    db.refresh(db_seed_cross)
-    return db_seed_cross
-
-
-# CREATE many new seed_crosses
-@app.post("/seed_crosses/bulk", response_model=List[models.SeedCross], status_code=status.HTTP_201_CREATED)
-def create_seed_crosses(seed_crosses: List[models.SeedCross], db: Session = Depends(get_db),
-                        api_key: str = Depends(get_api_key)):
-    db_seed_crosses = [schema.SeedCross(**seed_cross.dict()) for seed_cross in seed_crosses]
-    db.add_all(db_seed_crosses)
-    db.commit()
-    return db_seed_crosses
-
-
-# READ all seed_crosses
-@app.get("/seed_crosses/", response_model=List[models.SeedCross])
-def read_seed_crosses(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    return db.query(schema.SeedCross).all()
-
-
-# READ a single seed_cross by ID
-@app.get("/seed_crosses/{cross_id}", response_model=models.SeedCross)
-def read_seed_cross(cross_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    seed_cross = db.query(schema.SeedCross).filter(schema.SeedCross.cross_id == cross_id).first()
-    if seed_cross is None:
-        raise HTTPException(status_code=404, detail="SeedCross not found")
-    return seed_cross
-
-
-# UPDATE a seed_cross by ID
-@app.put("/seed_crosses/{cross_id}", response_model=models.SeedCross)
-def update_seed_cross(cross_id: int, update_data: models.SeedCross, db: Session = Depends(get_db),
-                      api_key: str = Depends(get_api_key)):
-    seed_cross = db.query(schema.SeedCross).filter(schema.SeedCross.cross_id == cross_id).first()
-    if seed_cross is None:
-        raise HTTPException(status_code=404, detail="SeedCross not found")
-    for key, value in update_data.dict().items():
-        setattr(seed_cross, key, value)
-    db.commit()
-    return seed_cross
-
-
-# DELETE a seed_cross by ID
-@app.delete("/seed_crosses/{cross_id}", response_model=models.SeedCross)
-def delete_seed_cross(cross_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    seed_cross = db.query(schema.SeedCross).filter(schema.SeedCross.cross_id == cross_id).first()
-    if seed_cross is None:
-        raise HTTPException(status_code=404, detail="SeedCross not found")
-    db.delete(seed_cross)
-    db.commit()
-    return seed_cross
+    return hydroponic_condition
 
 
 handler = Mangum(app)

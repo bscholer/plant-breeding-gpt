@@ -4,6 +4,53 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
+class Seed(BaseModel):
+    """
+    Used to create a new seed.
+    """
+    seed_id: Optional[int] = Field(None, description='id')
+    number_of_seeds: int = Field(..., description='Number of Seeds')
+    species: str = Field(..., description='Species')
+    variety: str = Field(..., description='Variety')
+    comments: Optional[str] = Field(None, description='Comments')
+
+
+class Germination(BaseModel):
+    """
+    Used to track germination of seeds. This exists to track the germination method and date, and to track how fertile
+    seeds are.
+    """
+    germination_id: Optional[int] = Field(None, description='id')
+    seed_id: int = Field(..., description='Seed ID')
+    planted_date: date
+    germination_date: Optional[date]
+    seeds_attempted: int = Field(..., description='Number of seeds attempted')
+    seeds_successful: Optional[int] = Field(..., description='Number of seeds that germinated')
+    method: str = Field(..., description='Germination Method')
+    comments: Optional[str] = Field(None, description='Comments')
+
+
+class Plant(BaseModel):
+    """
+    Used to create a new plant.
+    """
+    plant_id: Optional[int] = Field(None, description='id')
+    germination_id: int = Field(..., description='Germination ID')
+    hydroponic_system_id: Optional[int] = Field(..., description='Hydroponic System ID')
+    comments: Optional[str] = Field(None, description='Comments')
+
+
+class Yield(BaseModel):
+    yield_id: Optional[int] = Field(None, description='id')
+    plant_id: int = Field(..., description='Plant ID')
+    cross_id: Optional[int] = Field(None, description='Cross ID, include if applicable')
+    date: date
+    color: str = Field(..., description='Color (e.g. "Red", "Green", etc.)')
+    texture: str = Field(..., description='Texture (e.g. "Crisp", "Tender", etc.)')
+    # photo: Optional[bytes] = Field(None, description='Photo')
+    notes: Optional[str] = Field(None, description='Notes')
+
+
 # Pydantic models for request/response schemas
 class PlantCross(BaseModel):
     """
@@ -18,18 +65,13 @@ class PlantCross(BaseModel):
     comments: Optional[str] = Field(None, description='Comments')
 
 
-class HydroponicCondition(BaseModel):
+class PlantPlantCross(BaseModel):
     """
-    Used to create a new hydroponic condition entry.
+    Used to create a new PlantPlantCross entry, associating plants with their crosses.
     """
-    condition_id: Optional[int] = Field(None, description='id')
-    system_id: int = Field(..., description='System ID')
-    date: date
-    water_ph: Optional[float] = Field(..., description='Water pH')
-    electrical_conductivity: Optional[float] = Field(..., description='Electrical Conductivity')
-    water_temperature_f: Optional[int] = Field(..., description='Water Temperature (F)')
-    tds: Optional[float] = Field(..., description='Total Dissolved Solids')
-    comments: Optional[str] = Field(None, description='Comments')
+    id: Optional[int] = Field(None, description='Auto-generated id of the plant-plant cross entry')
+    plant_id: int = Field(..., description='Plant ID')
+    cross_id: int = Field(..., description='Cross ID')
 
 
 class TasteTest(BaseModel):
@@ -49,16 +91,6 @@ class TasteTest(BaseModel):
     comments: Optional[str] = Field(None, description='Comments')
 
 
-class Yield(BaseModel):
-    yield_id: Optional[int] = Field(None, description='id')
-    plant_id: int = Field(..., description='Plant ID')
-    date: date
-    color: str = Field(..., description='Color (e.g. "Red", "Green", etc.)')
-    texture: str = Field(..., description='Texture (e.g. "Crisp", "Tender", etc.)')
-    photo: Optional[bytes] = Field(None, description='Photo')
-    notes: Optional[str] = Field(None, description='Notes')
-
-
 class Observation(BaseModel):
     """
     Used to create a new observation.
@@ -75,17 +107,6 @@ class Observation(BaseModel):
     comments: Optional[str] = Field(None, description='Comments')
 
 
-class Plant(BaseModel):
-    """
-    Used to create a new plant.
-    """
-    plant_id: Optional[int] = Field(None, description='id')
-    germination_date: date
-    hydroponic_system_id: int = Field(..., description='Hydroponic System ID')
-    seed_id: int = Field(..., description='Seed ID')
-    comments: Optional[str] = Field(None, description='Comments')
-
-
 class HydroponicSystem(BaseModel):
     """
     Used to create a new hydroponic system.
@@ -95,21 +116,14 @@ class HydroponicSystem(BaseModel):
     comments: Optional[str] = Field(None, description='Comments')
 
 
-class Seed(BaseModel):
+class HydroponicCondition(BaseModel):
     """
-    Used to create a new seed.
+    Used to create a new hydroponic condition entry.
     """
-    seed_id: Optional[int] = Field(None, description='id')
-    number_of_seeds: int = Field(..., description='Number of Seeds')
-    species: str = Field(..., description='Species')
-    variety: str = Field(..., description='Variety')
+    condition_id: Optional[int] = Field(None, description='id')
+    system_id: int = Field(..., description='System ID')
+    date: date
+    water_ph: Optional[float] = Field(..., description='Water pH')
+    electrical_conductivity: Optional[float] = Field(..., description='Electrical Conductivity')
+    water_temperature_f: Optional[int] = Field(..., description='Water Temperature (F)')
     comments: Optional[str] = Field(None, description='Comments')
-
-
-class SeedCross(BaseModel):
-    """
-    This model is used to create a new seed cross. It is an association table between seeds and plant_crosses.
-    """
-    id: Optional[int] = Field(None, description='id')
-    seed_id: int = Field(..., description='Seed ID')
-    cross_id: int = Field(..., description='Cross ID')

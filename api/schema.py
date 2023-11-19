@@ -53,8 +53,6 @@ class Yield(Base):
 class PlantCross(Base):
     __tablename__ = 'plant_crosses'
     cross_id = Column(Integer, primary_key=True, autoincrement=True)
-    parent_1_id = Column(Integer, ForeignKey('plants.plant_id'))
-    parent_2_id = Column(Integer, ForeignKey('plants.plant_id'))
     cross_date = Column(Date)
     method = Column(String(255))
     comments = Column(Text, nullable=True)
@@ -68,9 +66,11 @@ class PlantPlantCross(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     plant_id = Column(Integer, ForeignKey('plants.plant_id'))
     cross_id = Column(Integer, ForeignKey('plant_crosses.cross_id'))
+    role = Column(String(255))  # Male or Female
 
-    plant = relationship('Plant', back_populates='plant_crosses')
-    cross = relationship('PlantCross', back_populates='plants')
+    # Relationship to the Plant and PlantCross tables
+    plant = relationship("Plant", back_populates="plants")
+    cross = relationship("PlantCross", back_populates="plants")
 
 
 class TasteTest(Base):
@@ -119,10 +119,6 @@ class HydroponicCondition(Base):
     water_temperature_f = Column(Integer, nullable=True)
     comments = Column(Text, nullable=True)
 
-
-# necessary for the association table
-Plant.plant_crosses = relationship("PlantPlantCross", order_by=PlantPlantCross.id, back_populates="plant")
-PlantCross.plants = relationship("PlantPlantCross", order_by=PlantPlantCross.id, back_populates="cross")
 
 # create an engine that stores data in the local directory's
 # sqlalchemy_example.db file.

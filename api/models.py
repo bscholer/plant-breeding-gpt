@@ -58,8 +58,8 @@ class PlantCross(BaseModel):
     Ensure that the user specifies the male and female plants.
     """
     cross_id: Optional[int] = Field(None, description='id')
-    parent_1_id: int = Field(..., description='Male parent')
-    parent_2_id: int = Field(..., description='Female parent')
+    # parent_1_id: int = Field(..., description='Male parent')
+    # parent_2_id: int = Field(..., description='Female parent')
     cross_date: date
     method: str = Field(..., description='Pollination Method, e.g. "Hand Pollination", "Open Pollination"')
     comments: Optional[str] = Field(None, description='Comments')
@@ -69,9 +69,10 @@ class PlantPlantCross(BaseModel):
     """
     Used to create a new PlantPlantCross entry, associating plants with their crosses.
     """
-    id: Optional[int] = Field(None, description='Auto-generated id of the plant-plant cross entry')
+    # id: Optional[int] = Field(None, description='Auto-generated id of the plant-plant cross entry')
     plant_id: int = Field(..., description='Plant ID')
     cross_id: int = Field(..., description='Cross ID')
+    role: str = Field(..., description='Role in the cross, either "Male" or "Female"')
 
 
 class TasteTest(BaseModel):

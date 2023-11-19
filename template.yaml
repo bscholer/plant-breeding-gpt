@@ -47,7 +47,7 @@ Resources:
       CodeUri: api
       Handler: main.handler
       Runtime: python3.11
-      MemorySize: 1024
+      MemorySize: 256
       Timeout: 30
       Events:
         ApiEvent:

@@ -1,5 +1,6 @@
 import logging
 import os
+from datetime import time
 from typing import List
 
 from databases import Database
@@ -18,6 +19,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 load_dotenv()
+print('loaded dotenv')
 
 DATABASE_URL = f"mysql+pymysql://{os.getenv('DB_USER')}:" \
                f"{os.getenv('DB_PASSWORD')}@" \

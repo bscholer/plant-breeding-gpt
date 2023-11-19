@@ -1,18 +1,20 @@
-FROM public.ecr.aws/lambda/python:3.11
+FROM python:3.11
 
 # Install GCC and other build essentials
-RUN yum install -y gcc-c++ make
-#WORKDIR /app
+#RUN #yum install -y gcc-c++ make
+WORKDIR /app
 
-COPY requirements.txt ${LAMBDA_TASK_ROOT}
+COPY requirements.txt .
 
 RUN pip install -r requirements.txt
 
-COPY . ${LAMBDA_TASK_ROOT}
+RUN pip install uvicorn
+
+COPY . .
 
 #EXPOSE 80
 
 ENV PYTHONUNBUFFERED=1
 
-#CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
-CMD ["main.handler"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+#CMD ["main.handler"]

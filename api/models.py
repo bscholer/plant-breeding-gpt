@@ -9,7 +9,7 @@ class Seed(BaseModel):
     Used to create a new seed.
     """
     seed_id: Optional[int] = Field(None, description='id')
-    number_of_seeds: int = Field(..., description='Number of Seeds')
+    number_of_seeds: Optional[int] = Field(..., description='Number of Seeds')
     species: str = Field(..., description='Species')
     variety: str = Field(..., description='Variety')
     comments: Optional[str] = Field(None, description='Comments')

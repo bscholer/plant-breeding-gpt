@@ -11,8 +11,8 @@ class Seed(Base):
     yield_id = Column(Integer, ForeignKey('yield.yield_id'), nullable=True)
     species = Column(String(255))
     variety = Column(String(255))
-    number_of_seeds = Column(Integer)
-    comments = Column(Text)
+    number_of_seeds = Column(Integer, nullable=True)
+    comments = Column(Text, nullable=True)
 
 
 class Germination(Base):

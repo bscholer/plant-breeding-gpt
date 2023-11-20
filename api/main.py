@@ -69,7 +69,7 @@ def get_api_key(api_key: str = Header(...)):
     return api_key
 
 
-@app.post("/run_select_query/")
+@app.post("/run_select_query/", openapi_extra={"x-openai-isConsequential": False}, operation_id="runSelectQuery")
 async def run_select_query(query: str, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     # Check that only SELECT statements are allowed
     if not query.strip().lower().startswith("select"):
@@ -84,7 +84,8 @@ async def run_select_query(query: str, db: Session = Depends(get_db), api_key: s
 
 
 # CREATE a new seed
-@app.post("/seeds/", response_model=models.Seed, status_code=status.HTTP_201_CREATED)
+@app.post("/seeds/", response_model=models.Seed, status_code=status.HTTP_201_CREATED,
+          openapi_extra={"x-openai-isConsequential": True}, operation_id="createSeed")
 def create_seed(seed: models.Seed, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     db_seed = schema.Seed(**seed.dict())
     db.add(db_seed)
@@ -94,7 +95,8 @@ def create_seed(seed: models.Seed, db: Session = Depends(get_db), api_key: str =
 
 
 # CREATE many new seeds
-@app.post("/seeds/bulk", response_model=List[models.Seed], status_code=status.HTTP_201_CREATED)
+@app.post("/seeds/bulk", response_model=List[models.Seed], status_code=status.HTTP_201_CREATED,
+          openapi_extra={"x-openai-isConsequential": True}, operation_id="createSeeds")
 def create_seeds(seeds: List[models.Seed], db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     db_seeds = [schema.Seed(**seed.dict()) for seed in seeds]
     db.add_all(db_seeds)
@@ -103,13 +105,15 @@ def create_seeds(seeds: List[models.Seed], db: Session = Depends(get_db), api_ke
 
 
 # READ all seeds
-@app.get("/seeds/", response_model=List[models.Seed])
+@app.get("/seeds/", response_model=List[models.Seed], openapi_extra={"x-openai-isConsequential": False},
+         operation_id="readAllSeeds")
 def read_seeds(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     return db.query(schema.Seed).all()
 
 
 # READ a single seed by ID
-@app.get("/seeds/{seed_id}", response_model=models.Seed)
+@app.get("/seeds/{seed_id}", response_model=models.Seed, openapi_extra={"x-openai-isConsequential": False},
+         operation_id="readSeed")
 def read_seed(seed_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     seed = db.query(schema.Seed).filter(schema.Seed.seed_id == seed_id).first()
     if seed is None:
@@ -118,7 +122,8 @@ def read_seed(seed_id: int, db: Session = Depends(get_db), api_key: str = Depend
 
 
 # UPDATE a seed by ID
-@app.put("/seeds/{seed_id}", response_model=models.Seed)
+@app.put("/seeds/{seed_id}", response_model=models.Seed, openapi_extra={"x-openai-isConsequential": True},
+         operation_id="updateSeed")
 def update_seed(seed_id: int, update_data: models.Seed, db: Session = Depends(get_db),
                 api_key: str = Depends(get_api_key)):
     seed = db.query(schema.Seed).filter(schema.Seed.seed_id == seed_id).first()
@@ -131,7 +136,8 @@ def update_seed(seed_id: int, update_data: models.Seed, db: Session = Depends(ge
 
 
 # DELETE a seed by ID
-@app.delete("/seeds/{seed_id}", response_model=models.Seed)
+@app.delete("/seeds/{seed_id}", response_model=models.Seed, openapi_extra={"x-openai-isConsequential": True},
+            operation_id="deleteSeed")
 def delete_seed(seed_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     seed = db.query(schema.Seed).filter(schema.Seed.seed_id == seed_id).first()
     if seed is None:
@@ -142,7 +148,8 @@ def delete_seed(seed_id: int, db: Session = Depends(get_db), api_key: str = Depe
 
 
 # CREATE a new germination
-@app.post("/germinations/", response_model=models.Germination, status_code=status.HTTP_201_CREATED)
+@app.post("/germinations/", response_model=models.Germination, status_code=status.HTTP_201_CREATED,
+          openapi_extra={"x-openai-isConsequential": True}, operation_id="createGermination")
 def create_germination(germination: models.Germination, db: Session = Depends(get_db),
                        api_key: str = Depends(get_api_key)):
     db_germination = schema.Germination(**germination.dict())
@@ -153,7 +160,8 @@ def create_germination(germination: models.Germination, db: Session = Depends(ge
 
 
 # CREATE many new germinations
-@app.post("/germinations/bulk", response_model=List[models.Germination], status_code=status.HTTP_201_CREATED)
+@app.post("/germinations/bulk", response_model=List[models.Germination], status_code=status.HTTP_201_CREATED,
+          openapi_extra={"x-openai-isConsequential": True}, operation_id="createGerminations")
 def create_germinations(germinations: List[models.Germination], db: Session = Depends(get_db),
                         api_key: str = Depends(get_api_key)):
     db_germinations = [schema.Germination(**germination.dict()) for germination in germinations]
@@ -163,13 +171,14 @@ def create_germinations(germinations: List[models.Germination], db: Session = De
 
 
 # READ all germinations
-@app.get("/germinations/", response_model=List[models.Germination])
+@app.get("/germinations/", response_model=List[models.Germination], openapi_extra={"x-openai-isConsequential": False}, operation_id="readAllGerminations")
 def read_germinations(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     return db.query(schema.Germination).all()
 
 
 # READ a single germination by ID
-@app.get("/germinations/{germination_id}", response_model=models.Germination)
+@app.get("/germinations/{germination_id}", response_model=models.Germination,
+         openapi_extra={"x-openai-isConsequential": False}, operation_id="readGermination")
 def read_germination(germination_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     germination = db.query(schema.Germination).filter(schema.Germination.germination_id == germination_id).first()
     if germination is None:
@@ -178,7 +187,8 @@ def read_germination(germination_id: int, db: Session = Depends(get_db), api_key
 
 
 # UPDATE a germination by ID
-@app.put("/germinations/{germination_id}", response_model=models.Germination)
+@app.put("/germinations/{germination_id}", response_model=models.Germination,
+         openapi_extra={"x-openai-isConsequential": True}, operation_id="updateGermination")
 def update_germination(germination_id: int, update_data: models.Germination, db: Session = Depends(get_db),
                        api_key: str = Depends(get_api_key)):
     germination = db.query(schema.Germination).filter(schema.Germination.germination_id == germination_id).first()
@@ -191,7 +201,8 @@ def update_germination(germination_id: int, update_data: models.Germination, db:
 
 
 # DELETE a germination by ID
-@app.delete("/germinations/{germination_id}", response_model=models.Germination)
+@app.delete("/germinations/{germination_id}", response_model=models.Germination,
+            openapi_extra={"x-openai-isConsequential": True}, operation_id="deleteGermination")
 def delete_germination(germination_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     germination = db.query(schema.Germination).filter(schema.Germination.germination_id == germination_id).first()
     if germination is None:
@@ -202,7 +213,8 @@ def delete_germination(germination_id: int, db: Session = Depends(get_db), api_k
 
 
 # CREATE a new plant
-@app.post("/plants/", response_model=models.Plant, status_code=status.HTTP_201_CREATED)
+@app.post("/plants/", response_model=models.Plant, status_code=status.HTTP_201_CREATED,
+          openapi_extra={"x-openai-isConsequential": True}, operation_id="createPlant")
 def create_plant(plant: models.Plant, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     db_plant = schema.Plant(**plant.dict())
     db.add(db_plant)
@@ -212,7 +224,8 @@ def create_plant(plant: models.Plant, db: Session = Depends(get_db), api_key: st
 
 
 # CREATE many new plants
-@app.post("/plants/bulk", response_model=List[models.Plant], status_code=status.HTTP_201_CREATED)
+@app.post("/plants/bulk", response_model=List[models.Plant], status_code=status.HTTP_201_CREATED,
+          openapi_extra={"x-openai-isConsequential": True}, operation_id="createPlants")
 def create_plants(plants: List[models.Plant], db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     db_plants = [schema.Plant(**plant.dict()) for plant in plants]
     db.add_all(db_plants)
@@ -221,13 +234,13 @@ def create_plants(plants: List[models.Plant], db: Session = Depends(get_db), api
 
 
 # READ all plants
-@app.get("/plants/", response_model=List[models.Plant])
+@app.get("/plants/", response_model=List[models.Plant], openapi_extra={"x-openai-isConsequential": False}, operation_id="readAllPlants")
 def read_plants(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     return db.query(schema.Plant).all()
 
 
 # READ a single plant by ID
-@app.get("/plants/{plant_id}", response_model=models.Plant)
+@app.get("/plants/{plant_id}", response_model=models.Plant, openapi_extra={"x-openai-isConsequential": False}, operation_id="readPlant")
 def read_plant(plant_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     plant = db.query(schema.Plant).filter(schema.Plant.plant_id == plant_id).first()
     if plant is None:
@@ -236,7 +249,7 @@ def read_plant(plant_id: int, db: Session = Depends(get_db), api_key: str = Depe
 
 
 # UPDATE a plant by ID
-@app.put("/plants/{plant_id}", response_model=models.Plant)
+@app.put("/plants/{plant_id}", response_model=models.Plant, openapi_extra={"x-openai-isConsequential": True}, operation_id="updatePlant")
 def update_plant(plant_id: int, update_data: models.Plant, db: Session = Depends(get_db),
                  api_key: str = Depends(get_api_key)):
     plant = db.query(schema.Plant).filter(schema.Plant.plant_id == plant_id).first()
@@ -249,7 +262,7 @@ def update_plant(plant_id: int, update_data: models.Plant, db: Session = Depends
 
 
 # DELETE a plant by ID
-@app.delete("/plants/{plant_id}", response_model=models.Plant)
+@app.delete("/plants/{plant_id}", response_model=models.Plant, openapi_extra={"x-openai-isConsequential": True}, operation_id="deletePlant")
 def delete_plant(plant_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     plant = db.query(schema.Plant).filter(schema.Plant.plant_id == plant_id).first()
     if plant is None:
@@ -260,7 +273,8 @@ def delete_plant(plant_id: int, db: Session = Depends(get_db), api_key: str = De
 
 
 # CREATE a new yield
-@app.post("/yields/", response_model=models.Yield, status_code=status.HTTP_201_CREATED)
+@app.post("/yields/", response_model=models.Yield, status_code=status.HTTP_201_CREATED,
+          openapi_extra={"x-openai-isConsequential": True}, operation_id="createYield")
 def create_yield(yield_: models.Yield, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     db_yield = schema.Yield(**yield_.dict())
     db.add(db_yield)
@@ -270,7 +284,8 @@ def create_yield(yield_: models.Yield, db: Session = Depends(get_db), api_key: s
 
 
 # CREATE many new yields
-@app.post("/yields/bulk", response_model=List[models.Yield], status_code=status.HTTP_201_CREATED)
+@app.post("/yields/bulk", response_model=List[models.Yield], status_code=status.HTTP_201_CREATED,
+          openapi_extra={"x-openai-isConsequential": True}, operation_id="createYields")
 def create_yields(yields: List[models.Yield], db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     db_yields = [schema.Yield(**yield_.dict()) for yield_ in yields]
     db.add_all(db_yields)
@@ -279,13 +294,13 @@ def create_yields(yields: List[models.Yield], db: Session = Depends(get_db), api
 
 
 # READ all yields
-@app.get("/yields/", response_model=List[models.Yield])
+@app.get("/yields/", response_model=List[models.Yield], openapi_extra={"x-openai-isConsequential": False}, operation_id="readAllYields")
 def read_yields(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     return db.query(schema.Yield).all()
 
 
 # READ a single yield by ID
-@app.get("/yields/{yield_id}", response_model=models.Yield)
+@app.get("/yields/{yield_id}", response_model=models.Yield, openapi_extra={"x-openai-isConsequential": False}, operation_id="readYield")
 def read_yield(yield_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     yield_ = db.query(schema.Yield).filter(schema.Yield.yield_id == yield_id).first()
     if yield_ is None:
@@ -294,7 +309,7 @@ def read_yield(yield_id: int, db: Session = Depends(get_db), api_key: str = Depe
 
 
 # UPDATE a yield by ID
-@app.put("/yields/{yield_id}", response_model=models.Yield)
+@app.put("/yields/{yield_id}", response_model=models.Yield, openapi_extra={"x-openai-isConsequential": True}, operation_id="updateYield")
 def update_yield(yield_id: int, update_data: models.Yield, db: Session = Depends(get_db),
                  api_key: str = Depends(get_api_key)):
     yield_ = db.query(schema.Yield).filter(schema.Yield.yield_id == yield_id).first()
@@ -307,7 +322,7 @@ def update_yield(yield_id: int, update_data: models.Yield, db: Session = Depends
 
 
 # DELETE a yield by ID
-@app.delete("/yields/{yield_id}", response_model=models.Yield)
+@app.delete("/yields/{yield_id}", response_model=models.Yield, openapi_extra={"x-openai-isConsequential": True}, operation_id="deleteYield")
 def delete_yield(yield_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     yield_ = db.query(schema.Yield).filter(schema.Yield.yield_id == yield_id).first()
     if yield_ is None:
@@ -318,7 +333,8 @@ def delete_yield(yield_id: int, db: Session = Depends(get_db), api_key: str = De
 
 
 # CREATE a new plant_cross
-@app.post("/plant_crosses/", response_model=models.PlantCross, status_code=status.HTTP_201_CREATED)
+@app.post("/plant_crosses/", response_model=models.PlantCross, status_code=status.HTTP_201_CREATED,
+          openapi_extra={"x-openai-isConsequential": True}, operation_id="createPlantCross")
 def create_plant_cross(plant_cross: models.PlantCross, db: Session = Depends(get_db),
                        api_key: str = Depends(get_api_key)):
     db_plant_cross = schema.PlantCross(**plant_cross.dict())
@@ -329,7 +345,8 @@ def create_plant_cross(plant_cross: models.PlantCross, db: Session = Depends(get
 
 
 # CREATE many new plant_crosses
-@app.post("/plant_crosses/bulk", response_model=List[models.PlantCross], status_code=status.HTTP_201_CREATED)
+@app.post("/plant_crosses/bulk", response_model=List[models.PlantCross], status_code=status.HTTP_201_CREATED,
+          openapi_extra={"x-openai-isConsequential": True}, operation_id="createPlantCrosses")
 def create_plant_crosses(plant_crosses: List[models.PlantCross], db: Session = Depends(get_db),
                          api_key: str = Depends(get_api_key)):
     db_plant_crosses = [schema.PlantCross(**plant_cross.dict()) for plant_cross in plant_crosses]
@@ -339,13 +356,14 @@ def create_plant_crosses(plant_crosses: List[models.PlantCross], db: Session = D
 
 
 # READ all plant_crosses
-@app.get("/plant_crosses/", response_model=List[models.PlantCross])
+@app.get("/plant_crosses/", response_model=List[models.PlantCross], openapi_extra={"x-openai-isConsequential": False},  operation_id="readAllPlantCrosses")
 def read_plant_crosses(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     return db.query(schema.PlantCross).all()
 
 
 # READ a single plant_cross by ID
-@app.get("/plant_crosses/{cross_id}", response_model=models.PlantCross)
+@app.get("/plant_crosses/{cross_id}", response_model=models.PlantCross,
+         openapi_extra={"x-openai-isConsequential": False}, operation_id="readPlantCross")
 def read_plant_cross(cross_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     plant_cross = db.query(schema.PlantCross).filter(schema.PlantCross.cross_id == cross_id).first()
     if plant_cross is None:
@@ -354,7 +372,8 @@ def read_plant_cross(cross_id: int, db: Session = Depends(get_db), api_key: str 
 
 
 # UPDATE a plant_cross by ID
-@app.put("/plant_crosses/{cross_id}", response_model=models.PlantCross)
+@app.put("/plant_crosses/{cross_id}", response_model=models.PlantCross,
+         openapi_extra={"x-openai-isConsequential": True}, operation_id="updatePlantCross")
 def update_plant_cross(cross_id: int, update_data: models.PlantCross, db: Session = Depends(get_db),
                        api_key: str = Depends(get_api_key)):
     plant_cross = db.query(schema.PlantCross).filter(schema.PlantCross.cross_id == cross_id).first()
@@ -367,7 +386,8 @@ def update_plant_cross(cross_id: int, update_data: models.PlantCross, db: Sessio
 
 
 # DELETE a plant_cross by ID
-@app.delete("/plant_crosses/{cross_id}", response_model=models.PlantCross)
+@app.delete("/plant_crosses/{cross_id}", response_model=models.PlantCross,
+            openapi_extra={"x-openai-isConsequential": True}, operation_id="deletePlantCross")
 def delete_plant_cross(cross_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     plant_cross = db.query(schema.PlantCross).filter(schema.PlantCross.cross_id == cross_id).first()
     if plant_cross is None:
@@ -378,7 +398,8 @@ def delete_plant_cross(cross_id: int, db: Session = Depends(get_db), api_key: st
 
 
 # CREATE a new plant_plant_cross
-@app.post("/plant_plant_crosses/", response_model=models.PlantPlantCross, status_code=status.HTTP_201_CREATED)
+@app.post("/plant_plant_crosses/", response_model=models.PlantPlantCross, status_code=status.HTTP_201_CREATED,
+          openapi_extra={"x-openai-isConsequential": True}, operation_id="createPlantPlantCross")
 def create_plant_plant_cross(plant_plant_cross: models.PlantPlantCross, db: Session = Depends(get_db),
                              api_key: str = Depends(get_api_key)):
     db_plant_plant_cross = schema.PlantPlantCross(**plant_plant_cross.dict())
@@ -390,7 +411,7 @@ def create_plant_plant_cross(plant_plant_cross: models.PlantPlantCross, db: Sess
 
 # CREATE many new plant_plant_crosses
 @app.post("/plant_plant_crosses/bulk", response_model=List[models.PlantPlantCross],
-          status_code=status.HTTP_201_CREATED)
+          status_code=status.HTTP_201_CREATED, openapi_extra={"x-openai-isConsequential": True}, operation_id="createPlantPlantCrosses")
 def create_plant_plant_crosses(plant_plant_crosses: List[models.PlantPlantCross], db: Session = Depends(get_db),
                                api_key: str = Depends(get_api_key)):
     db_plant_plant_crosses = [schema.PlantPlantCross(**plant_plant_cross.dict()) for plant_plant_cross in
@@ -401,13 +422,15 @@ def create_plant_plant_crosses(plant_plant_crosses: List[models.PlantPlantCross]
 
 
 # READ all plant_plant_crosses
-@app.get("/plant_plant_crosses/", response_model=List[models.PlantPlantCross])
+@app.get("/plant_plant_crosses/", response_model=List[models.PlantPlantCross],
+         openapi_extra={"x-openai-isConsequential": False}, operation_id="readAllPlantPlantCrosses")
 def read_plant_plant_crosses(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     return db.query(schema.PlantPlantCross).all()
 
 
 # READ a single plant_plant_cross by ID
-@app.get("/plant_plant_crosses/{id}", response_model=models.PlantPlantCross)
+@app.get("/plant_plant_crosses/{id}", response_model=models.PlantPlantCross,
+         openapi_extra={"x-openai-isConsequential": False}, operation_id="readPlantPlantCross")
 def read_plant_plant_cross(id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     plant_plant_cross = db.query(schema.PlantPlantCross).filter(schema.PlantPlantCross.id == id).first()
     if plant_plant_cross is None:
@@ -416,7 +439,8 @@ def read_plant_plant_cross(id: int, db: Session = Depends(get_db), api_key: str 
 
 
 # UPDATE a plant_plant_cross by ID
-@app.put("/plant_plant_crosses/{id}", response_model=models.PlantPlantCross)
+@app.put("/plant_plant_crosses/{id}", response_model=models.PlantPlantCross,
+         openapi_extra={"x-openai-isConsequential": True}, operation_id="updatePlantPlantCross")
 def update_plant_plant_cross(id: int, update_data: models.PlantPlantCross, db: Session = Depends(get_db),
                              api_key: str = Depends(get_api_key)):
     plant_plant_cross = db.query(schema.PlantPlantCross).filter(schema.PlantPlantCross.id == id).first()
@@ -429,7 +453,8 @@ def update_plant_plant_cross(id: int, update_data: models.PlantPlantCross, db: S
 
 
 # DELETE a plant_plant_cross by ID
-@app.delete("/plant_plant_crosses/{id}", response_model=models.PlantPlantCross)
+@app.delete("/plant_plant_crosses/{id}", response_model=models.PlantPlantCross,
+            openapi_extra={"x-openai-isConsequential": True}, operation_id="deletePlantPlantCross")
 def delete_plant_plant_cross(id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     plant_plant_cross = db.query(schema.PlantPlantCross).filter(schema.PlantPlantCross.id == id).first()
     if plant_plant_cross is None:
@@ -440,7 +465,8 @@ def delete_plant_plant_cross(id: int, db: Session = Depends(get_db), api_key: st
 
 
 # CREATE a new taste_test
-@app.post("/taste_tests/", response_model=models.TasteTest, status_code=status.HTTP_201_CREATED)
+@app.post("/taste_tests/", response_model=models.TasteTest, status_code=status.HTTP_201_CREATED,
+          openapi_extra={"x-openai-isConsequential": True}, operation_id="createTasteTest")
 def create_taste_test(taste_test: models.TasteTest, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     db_taste_test = schema.TasteTest(**taste_test.dict())
     db.add(db_taste_test)
@@ -450,7 +476,8 @@ def create_taste_test(taste_test: models.TasteTest, db: Session = Depends(get_db
 
 
 # CREATE many new taste_tests
-@app.post("/taste_tests/bulk", response_model=List[models.TasteTest], status_code=status.HTTP_201_CREATED)
+@app.post("/taste_tests/bulk", response_model=List[models.TasteTest], status_code=status.HTTP_201_CREATED,
+          openapi_extra={"x-openai-isConsequential": True},     operation_id="createTasteTests")
 def create_taste_tests(taste_tests: List[models.TasteTest], db: Session = Depends(get_db),
                        api_key: str = Depends(get_api_key)):
     db_taste_tests = [schema.TasteTest(**taste_test.dict()) for taste_test in taste_tests]
@@ -460,13 +487,14 @@ def create_taste_tests(taste_tests: List[models.TasteTest], db: Session = Depend
 
 
 # READ all taste_tests
-@app.get("/taste_tests/", response_model=List[models.TasteTest])
+@app.get("/taste_tests/", response_model=List[models.TasteTest], openapi_extra={"x-openai-isConsequential": False}, operation_id="readAllTasteTests")
 def read_taste_tests(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     return db.query(schema.TasteTest).all()
 
 
 # READ a single taste_test by ID
-@app.get("/taste_tests/{taste_test_id}", response_model=models.TasteTest)
+@app.get("/taste_tests/{taste_test_id}", response_model=models.TasteTest,
+         openapi_extra={"x-openai-isConsequential": False}, operation_id="readTasteTest")
 def read_taste_test(taste_test_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     taste_test = db.query(schema.TasteTest).filter(schema.TasteTest.taste_test_id == taste_test_id).first()
     if taste_test is None:
@@ -475,7 +503,8 @@ def read_taste_test(taste_test_id: int, db: Session = Depends(get_db), api_key: 
 
 
 # UPDATE a taste_test by ID
-@app.put("/taste_tests/{taste_test_id}", response_model=models.TasteTest)
+@app.put("/taste_tests/{taste_test_id}", response_model=models.TasteTest,
+         openapi_extra={"x-openai-isConsequential": True}, operation_id="updateTasteTest")
 def update_taste_test(taste_test_id: int, update_data: models.TasteTest, db: Session = Depends(get_db),
                       api_key: str = Depends(get_api_key)):
     taste_test = db.query(schema.TasteTest).filter(schema.TasteTest.taste_test_id == taste_test_id).first()
@@ -488,7 +517,8 @@ def update_taste_test(taste_test_id: int, update_data: models.TasteTest, db: Ses
 
 
 # DELETE a taste_test by ID
-@app.delete("/taste_tests/{taste_test_id}", response_model=models.TasteTest)
+@app.delete("/taste_tests/{taste_test_id}", response_model=models.TasteTest,
+            openapi_extra={"x-openai-isConsequential": True}, operation_id="deleteTasteTest")
 def delete_taste_test(taste_test_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     taste_test = db.query(schema.TasteTest).filter(schema.TasteTest.taste_test_id == taste_test_id).first()
     if taste_test is None:
@@ -499,7 +529,8 @@ def delete_taste_test(taste_test_id: int, db: Session = Depends(get_db), api_key
 
 
 # CREATE a new observation
-@app.post("/observations/", response_model=models.Observation, status_code=status.HTTP_201_CREATED)
+@app.post("/observations/", response_model=models.Observation, status_code=status.HTTP_201_CREATED,
+          openapi_extra={"x-openai-isConsequential": True}, operation_id="createObservation")
 def create_observation(observation: models.Observation, db: Session = Depends(get_db),
                        api_key: str = Depends(get_api_key)):
     db_observation = schema.Observation(**observation.dict())
@@ -510,7 +541,8 @@ def create_observation(observation: models.Observation, db: Session = Depends(ge
 
 
 # CREATE many new observations
-@app.post("/observations/bulk", response_model=List[models.Observation], status_code=status.HTTP_201_CREATED)
+@app.post("/observations/bulk", response_model=List[models.Observation], status_code=status.HTTP_201_CREATED,
+          openapi_extra={"x-openai-isConsequential": True}, operation_id="createObservations")
 def create_observations(observations: List[models.Observation], db: Session = Depends(get_db),
                         api_key: str = Depends(get_api_key)):
     db_observations = [schema.Observation(**observation.dict()) for observation in observations]
@@ -520,13 +552,14 @@ def create_observations(observations: List[models.Observation], db: Session = De
 
 
 # READ all observations
-@app.get("/observations/", response_model=List[models.Observation])
+@app.get("/observations/", response_model=List[models.Observation], openapi_extra={"x-openai-isConsequential": False}, operation_id="readAllObservations")
 def read_observations(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     return db.query(schema.Observation).all()
 
 
 # READ a single observation by ID
-@app.get("/observations/{observation_id}", response_model=models.Observation)
+@app.get("/observations/{observation_id}", response_model=models.Observation,
+         openapi_extra={"x-openai-isConsequential": False}, operation_id="readObservation")
 def read_observation(observation_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     observation = db.query(schema.Observation).filter(schema.Observation.observation_id == observation_id).first()
     if observation is None:
@@ -535,7 +568,8 @@ def read_observation(observation_id: int, db: Session = Depends(get_db), api_key
 
 
 # UPDATE a observation by ID
-@app.put("/observations/{observation_id}", response_model=models.Observation)
+@app.put("/observations/{observation_id}", response_model=models.Observation,
+         openapi_extra={"x-openai-isConsequential": True}, operation_id="updateObservation")
 def update_observation(observation_id: int, update_data: models.Observation, db: Session = Depends(get_db),
                        api_key: str = Depends(get_api_key)):
     observation = db.query(schema.Observation).filter(schema.Observation.observation_id == observation_id).first()
@@ -548,7 +582,8 @@ def update_observation(observation_id: int, update_data: models.Observation, db:
 
 
 # DELETE a observation by ID
-@app.delete("/observations/{observation_id}", response_model=models.Observation)
+@app.delete("/observations/{observation_id}", response_model=models.Observation,
+            openapi_extra={"x-openai-isConsequential": True}, operation_id="deleteObservation")
 def delete_observation(observation_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     observation = db.query(schema.Observation).filter(schema.Observation.observation_id == observation_id).first()
     if observation is None:
@@ -559,7 +594,8 @@ def delete_observation(observation_id: int, db: Session = Depends(get_db), api_k
 
 
 # CREATE a new hydroponic_system
-@app.post("/hydroponic_systems/", response_model=models.HydroponicSystem, status_code=status.HTTP_201_CREATED)
+@app.post("/hydroponic_systems/", response_model=models.HydroponicSystem, status_code=status.HTTP_201_CREATED,
+          openapi_extra={"x-openai-isConsequential": True}, operation_id="createHydroponicSystem")
 def create_hydroponic_system(hydroponic_system: models.HydroponicSystem, db: Session = Depends(get_db),
                              api_key: str = Depends(get_api_key)):
     db_hydroponic_system = schema.HydroponicSystem(**hydroponic_system.dict())
@@ -571,7 +607,7 @@ def create_hydroponic_system(hydroponic_system: models.HydroponicSystem, db: Ses
 
 # CREATE many new hydroponic_systems
 @app.post("/hydroponic_systems/bulk", response_model=List[models.HydroponicSystem],
-          status_code=status.HTTP_201_CREATED)
+          status_code=status.HTTP_201_CREATED, openapi_extra={"x-openai-isConsequential": True}, operation_id="createHydroponicSystems")
 def create_hydroponic_systems(hydroponic_systems: List[models.HydroponicSystem], db: Session = Depends(get_db),
                               api_key: str = Depends(get_api_key)):
     db_hydroponic_systems = [schema.HydroponicSystem(**hydroponic_system.dict()) for hydroponic_system in
@@ -582,13 +618,15 @@ def create_hydroponic_systems(hydroponic_systems: List[models.HydroponicSystem],
 
 
 # READ all hydroponic_systems
-@app.get("/hydroponic_systems/", response_model=List[models.HydroponicSystem])
+@app.get("/hydroponic_systems/", response_model=List[models.HydroponicSystem],
+         openapi_extra={"x-openai-isConsequential": False}, operation_id="readAllHydroponicSystems")
 def read_hydroponic_systems(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     return db.query(schema.HydroponicSystem).all()
 
 
 # READ a single hydroponic_system by ID
-@app.get("/hydroponic_systems/{system_id}", response_model=models.HydroponicSystem)
+@app.get("/hydroponic_systems/{system_id}", response_model=models.HydroponicSystem,
+         openapi_extra={"x-openai-isConsequential": False}, operation_id="readHydroponicSystem")
 def read_hydroponic_system(system_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     hydroponic_system = db.query(schema.HydroponicSystem).filter(
         schema.HydroponicSystem.system_id == system_id).first()
@@ -598,7 +636,8 @@ def read_hydroponic_system(system_id: int, db: Session = Depends(get_db), api_ke
 
 
 # UPDATE a hydroponic_system by ID
-@app.put("/hydroponic_systems/{system_id}", response_model=models.HydroponicSystem)
+@app.put("/hydroponic_systems/{system_id}", response_model=models.HydroponicSystem,
+         openapi_extra={"x-openai-isConsequential": True}, operation_id="updateHydroponicSystem")
 def update_hydroponic_system(system_id: int, update_data: models.HydroponicSystem, db: Session = Depends(get_db),
                              api_key: str = Depends(get_api_key)):
     hydroponic_system = db.query(schema.HydroponicSystem).filter(
@@ -612,7 +651,8 @@ def update_hydroponic_system(system_id: int, update_data: models.HydroponicSyste
 
 
 # DELETE a hydroponic_system by ID
-@app.delete("/hydroponic_systems/{system_id}", response_model=models.HydroponicSystem)
+@app.delete("/hydroponic_systems/{system_id}", response_model=models.HydroponicSystem,
+            openapi_extra={"x-openai-isConsequential": True}, operation_id="deleteHydroponicSystem")
 def delete_hydroponic_system(system_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     hydroponic_system = db.query(schema.HydroponicSystem).filter(
         schema.HydroponicSystem.system_id == system_id).first()
@@ -624,7 +664,8 @@ def delete_hydroponic_system(system_id: int, db: Session = Depends(get_db), api_
 
 
 # CREATE a new hydroponic_condition
-@app.post("/hydroponic_conditions/", response_model=models.HydroponicCondition, status_code=status.HTTP_201_CREATED)
+@app.post("/hydroponic_conditions/", response_model=models.HydroponicCondition, status_code=status.HTTP_201_CREATED,
+          openapi_extra={"x-openai-isConsequential": True}, operation_id="createHydroponicCondition")
 def create_hydroponic_condition(hydroponic_condition: models.HydroponicCondition, db: Session = Depends(get_db),
                                 api_key: str = Depends(get_api_key)):
     db_hydroponic_condition = schema.HydroponicCondition(**hydroponic_condition.dict())
@@ -636,7 +677,7 @@ def create_hydroponic_condition(hydroponic_condition: models.HydroponicCondition
 
 # CREATE many new hydroponic_conditions
 @app.post("/hydroponic_conditions/bulk", response_model=List[models.HydroponicCondition],
-          status_code=status.HTTP_201_CREATED)
+          status_code=status.HTTP_201_CREATED, openapi_extra={"x-openai-isConsequential": True}, operation_id="createHydroponicConditions")
 def create_hydroponic_conditions(hydroponic_conditions: List[models.HydroponicCondition], db: Session = Depends(get_db),
                                  api_key: str = Depends(get_api_key)):
     db_hydroponic_conditions = [schema.HydroponicCondition(**hydroponic_condition.dict()) for hydroponic_condition in
@@ -647,13 +688,15 @@ def create_hydroponic_conditions(hydroponic_conditions: List[models.HydroponicCo
 
 
 # READ all hydroponic_conditions
-@app.get("/hydroponic_conditions/", response_model=List[models.HydroponicCondition])
+@app.get("/hydroponic_conditions/", response_model=List[models.HydroponicCondition],
+         openapi_extra={"x-openai-isConsequential": False}, operation_id="readAllHydroponicConditions")
 def read_hydroponic_conditions(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     return db.query(schema.HydroponicCondition).all()
 
 
 # READ a single hydroponic_condition by ID
-@app.get("/hydroponic_conditions/{condition_id}", response_model=models.HydroponicCondition)
+@app.get("/hydroponic_conditions/{condition_id}", response_model=models.HydroponicCondition,
+         openapi_extra={"x-openai-isConsequential": False}, operation_id="readHydroponicCondition")
 def read_hydroponic_condition(condition_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     hydroponic_condition = db.query(schema.HydroponicCondition).filter(
         schema.HydroponicCondition.condition_id == condition_id).first()
@@ -663,7 +706,8 @@ def read_hydroponic_condition(condition_id: int, db: Session = Depends(get_db), 
 
 
 # UPDATE a hydroponic_condition by ID
-@app.put("/hydroponic_conditions/{condition_id}", response_model=models.HydroponicCondition)
+@app.put("/hydroponic_conditions/{condition_id}", response_model=models.HydroponicCondition,
+         openapi_extra={"x-openai-isConsequential": True}, operation_id="updateHydroponicCondition")
 def update_hydroponic_condition(condition_id: int, update_data: models.HydroponicCondition,
                                 db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     hydroponic_condition = db.query(schema.HydroponicCondition).filter(
@@ -677,7 +721,8 @@ def update_hydroponic_condition(condition_id: int, update_data: models.Hydroponi
 
 
 # DELETE a hydroponic_condition by ID
-@app.delete("/hydroponic_conditions/{condition_id}", response_model=models.HydroponicCondition)
+@app.delete("/hydroponic_conditions/{condition_id}", response_model=models.HydroponicCondition,
+            openapi_extra={"x-openai-isConsequential": True}, operation_id="deleteHydroponicCondition")
 def delete_hydroponic_condition(condition_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     hydroponic_condition = db.query(schema.HydroponicCondition).filter(
         schema.HydroponicCondition.condition_id == condition_id).first()

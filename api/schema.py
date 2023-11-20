@@ -92,8 +92,8 @@ class Observation(Base):
     date = Column(Date)
     height_cm = Column(DECIMAL(5, 2), nullable=True)
     leaf_count = Column(Integer, nullable=True)
-    color = Column(String(255))
-    texture = Column(String(255))
+    color = Column(String(255), nullable=True)
+    texture = Column(String(255), nullable=True)
     # photo = Column(BLOB)
     comments = Column(Text, nullable=True)
 

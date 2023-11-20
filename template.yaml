@@ -47,7 +47,7 @@ Resources:
       CodeUri: api
       Handler: main.handler
       Runtime: python3.11
-      MemorySize: 256
+      MemorySize: 512
       Timeout: 30
       Events:
         ApiEvent:
@@ -62,6 +62,49 @@ Resources:
           DB_USER: bscholer
           DB_PASSWORD: !Ref DbPassword
           API_KEY: !Ref ApiKey
+
+  KeepWarmSchedule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "Trigger Lambda function every 5 minutes to keep it warm"
+      ScheduleExpression: "rate(5 minutes)"
+      Targets:
+        - Arn: !GetAtt PlantsApiFunction.Arn
+          Id: "TargetFunctionV1"
+      State: "ENABLED"
+  #
+  # PlantsApiDomain:
+  #   Type: AWS::ApiGatewayV2::DomainName
+  #   Properties:
+  #     DomainName: plants.benscholer.com
+  #     DomainNameConfigurations:
+  #       - CertificateArn: arn:aws:acm:us-east-2:856608212549:certificate/08a1fcdd-6a3b-4cec-ac20-6b9a036ccb95
+  #
+  # PlantsApiMapping:
+  #   Type: AWS::ApiGatewayV2::ApiMapping
+  #   Properties:
+  #     DomainName: !Ref PlantsApiDomain
+  #     ApiId: !Ref PlantsApiFunction
+  #     Stage: $default
+  #
+  # DnsRecordForPlantsApi:
+  #   Type: AWS::Route53::RecordSetGroup
+  #   Properties:
+  #     HostedZoneName: benscholer.com.
+  #     RecordSets:
+  #       - Name: plants.benscholer.com.
+  #         Type: A
+  #         AliasTarget:
+  #           DNSName: !GetAtt PlantsApiDomain.RegionalDomainName
+  #           HostedZoneId: !GetAtt PlantsApiDomain.RegionalHostedZoneId
+
+  PermissionForEventsToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref PlantsApiFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt KeepWarmSchedule.Arn
 
   PlantsDBSecurityGroup:
     Type: AWS::EC2::SecurityGroup

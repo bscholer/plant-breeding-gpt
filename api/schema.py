@@ -9,8 +9,8 @@ class Seed(Base):
     __tablename__ = 'seeds'
     seed_id = Column(Integer, primary_key=True, autoincrement=True)
     yield_id = Column(Integer, ForeignKey('yield.yield_id'), nullable=True)
-    species = Column(String(255))
-    variety = Column(String(255))
+    species = Column(String(255), nullable=True)
+    variety = Column(String(255), nullable=True)
     number_of_seeds = Column(Integer, nullable=True)
     comments = Column(Text, nullable=True)
 

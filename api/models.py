@@ -37,6 +37,7 @@ class Plant(BaseModel):
     plant_id: Optional[int] = Field(None, description='id')
     germination_id: int = Field(..., description='Germination ID (FK)')
     system_id: Optional[int] = Field(..., description='Hydroponic System ID (FK)')
+    death_date: Optional[date] = Field(None, description='Death Date')
     comments: Optional[str] = Field(None, description='Comments')
 
 

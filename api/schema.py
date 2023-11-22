@@ -32,6 +32,7 @@ class Plant(Base):
     plant_id = Column(Integer, primary_key=True, autoincrement=True)
     germination_id = Column(Integer, ForeignKey('germination.germination_id'))
     system_id = Column(Integer, ForeignKey('hydroponic_system.system_id'), nullable=True)
+    death_date = Column(Date, nullable=True)
     comments = Column(Text, nullable=True)
 
     # Relationships

@@ -1,7 +1,7 @@
 # 🌿 PlantBreedingGPT 🌿
 
-PlantBreedingGPT is your digital gardening companion that roots a MySQL database and API on the cloud, 
-allowing a custom GPT in ChatGPT to tend to your data garden through REST API calls. 
+PlantBreedingGPT is your digital gardening companion that roots a MySQL database (code-first with alembic) and API on the cloud, 
+allowing a custom GPT in ChatGPT to tend to your data garden through REST API calls, managing your plant breeding experiments with speech and photos. 
 Designed for AWS RDS and Lambda with FastAPI, this template is a fun, experimental project tailored to my personal grow operation.
 
 ## 📷 Screenshots

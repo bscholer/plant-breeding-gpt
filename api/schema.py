@@ -48,7 +48,7 @@ class Yield(Base):
     color = Column(String(255))
     texture = Column(String(255))
     # photo = Column(BLOB, nullable=True)
-    notes = Column(Text, nullable=True)
+    comments = Column(Text, nullable=True)
 
 
 class PlantCross(Base):
@@ -79,9 +79,9 @@ class TasteTest(Base):
     taste_test_id = Column(Integer, primary_key=True, autoincrement=True)
     plant_id = Column(Integer, ForeignKey('plants.plant_id'))
     date = Column(Date)
-    taste = Column(String(255))
-    texture = Column(String(255))
-    appearance = Column(String(255))
+    taste = Column(Integer)
+    texture = Column(Integer)
+    appearance = Column(Integer)
     overall = Column(Integer)
     comments = Column(Text, nullable=True)
 
@@ -116,8 +116,8 @@ class HydroponicCondition(Base):
     system_id = Column(Integer, ForeignKey('hydroponic_system.system_id'))
     date = Column(Date)
     water_ph = Column(DECIMAL(3, 2), nullable=True)
-    electrical_conductivity = Column(DECIMAL(5, 2), nullable=True)
-    water_temperature_f = Column(Integer, nullable=True)
+    electrical_conductivity_ms_cm = Column(DECIMAL(5, 2), nullable=True)
+    water_temperature_f = Column(DECIMAL(3, 2), nullable=True)
     comments = Column(Text, nullable=True)
 
 

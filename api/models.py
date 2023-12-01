@@ -9,10 +9,10 @@ class Seed(BaseModel):
     Used to create a new seed.
     """
     seed_id: Optional[int] = Field(None, description='id')
-    number_of_seeds: Optional[int] = Field(..., description='Number of Seeds')
+    number_of_seeds: Optional[int] = Field(..., description='Number of Seeds - Optional')
     species: Optional[str] = Field(..., description='Species')
     variety: Optional[str] = Field(..., description='Variety')
-    comments: Optional[str] = Field(None, description='Comments')
+    comments: Optional[str] = Field(None, description='Comments - Optional')
 
 
 class Germination(BaseModel):
@@ -25,9 +25,9 @@ class Germination(BaseModel):
     planted_date: date
     germination_date: Optional[date]
     seeds_attempted: int = Field(..., description='Number of seeds attempted')
-    seeds_successful: Optional[int] = Field(..., description='Number of seeds that germinated')
+    seeds_successful: Optional[int] = Field(..., description='Number of seeds that germinated - Optional')
     method: str = Field(..., description='Germination Method')
-    comments: Optional[str] = Field(None, description='Comments')
+    comments: Optional[str] = Field(None, description='Comments - Optional')
 
 
 class Plant(BaseModel):
@@ -37,19 +37,19 @@ class Plant(BaseModel):
     plant_id: Optional[int] = Field(None, description='id')
     germination_id: int = Field(..., description='Germination ID (FK)')
     system_id: Optional[int] = Field(..., description='Hydroponic System ID (FK)')
-    death_date: Optional[date] = Field(None, description='Death Date')
-    comments: Optional[str] = Field(None, description='Comments')
+    death_date: Optional[date] = Field(None, description='Death Date - Optional')
+    comments: Optional[str] = Field(None, description='Comments - Optional')
 
 
 class Yield(BaseModel):
     yield_id: Optional[int] = Field(None, description='id')
     plant_id: int = Field(..., description='Plant ID (FK)')
-    cross_id: Optional[int] = Field(None, description='Cross ID, include if applicable (FK)')
+    cross_id: Optional[int] = Field(None, description='Cross ID, include if applicable (FK) - Optional')
     date: date
     color: str = Field(..., description='Color (e.g. "Red", "Green", etc.)')
     texture: str = Field(..., description='Texture (e.g. "Crisp", "Tender", etc.)')
     # photo: Optional[bytes] = Field(None, description='Photo')
-    notes: Optional[str] = Field(None, description='Notes')
+    comments: Optional[str] = Field(None, description='Comments - Optional')
 
 
 # Pydantic models for request/response schemas
@@ -63,7 +63,7 @@ class PlantCross(BaseModel):
     # parent_2_id: int = Field(..., description='Female parent')
     cross_date: date
     method: str = Field(..., description='Pollination Method, e.g. "Hand Pollination", "Open Pollination"')
-    comments: Optional[str] = Field(None, description='Comments')
+    comments: Optional[str] = Field(None, description='Comments - Optional')
 
 
 class PlantPlantCross(BaseModel):
@@ -86,11 +86,11 @@ class TasteTest(BaseModel):
     taste_test_id: Optional[int] = Field(None, description='id')
     plant_id: int = Field(..., description='Plant ID (FK)')
     date: date
-    taste: str = Field(..., description='Taste rating (1-10)')
-    texture: str = Field(..., description='Texture rating (1-10)')
-    appearance: str = Field(..., description='Appearance rating (1-10)')
+    taste: int = Field(..., description='Taste rating (1-10)')
+    texture: int = Field(..., description='Texture rating (1-10)')
+    appearance: int = Field(..., description='Appearance rating (1-10)')
     overall: int = Field(..., description='Overall rating (1-10)')
-    comments: Optional[str] = Field(None, description='Comments')
+    comments: Optional[str] = Field(None, description='Comments - Optional')
 
 
 class Observation(BaseModel):
@@ -101,12 +101,12 @@ class Observation(BaseModel):
     observation_id: Optional[int] = Field(None, description='id')
     plant_id: int = Field(..., description='Plant ID (FK)')
     date: date
-    height_cm: Optional[float] = Field(..., description='Height (cm) DO NOT INPUT IF NOT MEASURED')
-    leaf_count: Optional[int] = Field(..., description='Leaf Count DO NOT INPUT IF NOT MEASURED')
-    color: Optional[str] = Field(..., description='Color of leaves (e.g. "Red", "Green", etc.)')
-    texture: Optional[str] = Field(..., description='Texture of leaves (e.g. "Crisp", "Tender", etc.)')
+    height_cm: Optional[float] = Field(..., description='Height (cm) DO NOT INPUT IF NOT MEASURED - Optional')
+    leaf_count: Optional[int] = Field(..., description='Leaf Count DO NOT INPUT IF NOT MEASURED - Optional')
+    color: Optional[str] = Field(..., description='Color of leaves (e.g. "Red", "Green", etc.) - Optional')
+    texture: Optional[str] = Field(..., description='Texture of leaves (e.g. "Crisp", "Tender", etc.) - Optional')
     # photo: Optional[bytes] = None
-    comments: Optional[str] = Field(None, description='Comments')
+    comments: Optional[str] = Field(None, description='Comments - Optional')
 
 
 class HydroponicSystem(BaseModel):
@@ -115,7 +115,7 @@ class HydroponicSystem(BaseModel):
     """
     system_id: Optional[int] = Field(None, description='id')
     system_type: str = Field(..., description='System Type')
-    comments: Optional[str] = Field(None, description='Comments')
+    comments: Optional[str] = Field(None, description='Comments - Optional')
 
 
 class HydroponicCondition(BaseModel):
@@ -125,7 +125,7 @@ class HydroponicCondition(BaseModel):
     condition_id: Optional[int] = Field(None, description='id')
     system_id: int = Field(..., description='System ID (FK)')
     date: date
-    water_ph: Optional[float] = Field(..., description='Water pH')
-    electrical_conductivity: Optional[float] = Field(..., description='Electrical Conductivity')
-    water_temperature_f: Optional[int] = Field(..., description='Water Temperature (F)')
-    comments: Optional[str] = Field(None, description='Comments')
+    water_ph: Optional[float] = Field(..., description='Water pH - Optional')
+    electrical_conductivity_ms_cm: Optional[float] = Field(..., description='Electrical Conductivity (mS/cm) - Optional')
+    water_temperature_f: Optional[float] = Field(..., description='Water Temperature (F), convert to F if provided in C - Optional')
+    comments: Optional[str] = Field(None, description='Comments - Optional')

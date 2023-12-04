@@ -91,7 +91,7 @@ class Observation(Base):
     observation_id = Column(Integer, primary_key=True, autoincrement=True)
     plant_id = Column(Integer, ForeignKey('plants.plant_id'))
     date = Column(Date)
-    height_cm = Column(DECIMAL(5, 2), nullable=True)
+    height_cm = Column(DECIMAL(), nullable=True)
     leaf_count = Column(Integer, nullable=True)
     color = Column(String(255), nullable=True)
     texture = Column(String(255), nullable=True)
@@ -115,9 +115,9 @@ class HydroponicCondition(Base):
     condition_id = Column(Integer, primary_key=True, autoincrement=True)
     system_id = Column(Integer, ForeignKey('hydroponic_system.system_id'))
     date = Column(Date)
-    water_ph = Column(DECIMAL(3, 2), nullable=True)
-    electrical_conductivity_ms_cm = Column(DECIMAL(5, 2), nullable=True)
-    water_temperature_f = Column(DECIMAL(3, 2), nullable=True)
+    water_ph = Column(DECIMAL(), nullable=True)
+    electrical_conductivity_ms_cm = Column(DECIMAL(), nullable=True)
+    water_temperature_f = Column(DECIMAL(), nullable=True)
     comments = Column(Text, nullable=True)
 
 

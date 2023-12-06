@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Text, Date, DECIMAL, ForeignKey, BLOB
+from sqlalchemy import create_engine, Column, Integer, String, Text, Date, ForeignKey, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -91,7 +91,7 @@ class Observation(Base):
     observation_id = Column(Integer, primary_key=True, autoincrement=True)
     plant_id = Column(Integer, ForeignKey('plants.plant_id'))
     date = Column(Date)
-    height_cm = Column(DECIMAL(), nullable=True)
+    height_cm = Column(Float(), nullable=True)
     leaf_count = Column(Integer, nullable=True)
     color = Column(String(255), nullable=True)
     texture = Column(String(255), nullable=True)
@@ -115,9 +115,9 @@ class HydroponicCondition(Base):
     condition_id = Column(Integer, primary_key=True, autoincrement=True)
     system_id = Column(Integer, ForeignKey('hydroponic_system.system_id'))
     date = Column(Date)
-    water_ph = Column(DECIMAL(), nullable=True)
-    electrical_conductivity_ms_cm = Column(DECIMAL(), nullable=True)
-    water_temperature_f = Column(DECIMAL(), nullable=True)
+    water_ph = Column(Float, nullable=True)
+    electrical_conductivity_us_cm = Column(Float, nullable=True)
+    water_temperature_f = Column(Float, nullable=True)
     comments = Column(Text, nullable=True)
 
 

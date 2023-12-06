@@ -126,6 +126,6 @@ class HydroponicCondition(BaseModel):
     system_id: int = Field(..., description='System ID (FK)')
     date: date
     water_ph: Optional[float] = Field(..., description='Water pH - Optional')
-    electrical_conductivity_ms_cm: Optional[float] = Field(..., description='Electrical Conductivity (mS/cm) - Optional')
+    electrical_conductivity_us_cm: Optional[float] = Field(..., description='Electrical Conductivity (uS/cm) - Optional')
     water_temperature_f: Optional[float] = Field(..., description='Water Temperature (F), convert to F if provided in C - Optional')
     comments: Optional[str] = Field(None, description='Comments - Optional')

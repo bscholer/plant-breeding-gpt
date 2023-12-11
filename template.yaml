@@ -91,4 +91,4 @@ Resources:
 Outputs:
   PlantsApi:
     Description: "API Gateway endpoint URL for Prod environment"
-    Value: !Sub "https://${PlantsFastHttpApi}.execute-api.${AWS::Region}.amazonaws.com/"
+    Value: !Sub "https://${PlantsFastApiFunction}.execute-api.${AWS::Region}.amazonaws.com/"

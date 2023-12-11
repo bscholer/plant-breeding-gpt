@@ -1,12 +1,10 @@
 import logging
 import os
-from datetime import time
-from typing import List
+from typing import List, Union
 
 from databases import Database
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Depends, Header
-from fastapi.openapi.models import Server
 from mangum import Mangum
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import sessionmaker, Session
@@ -34,9 +32,9 @@ database = Database(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 print('created sessionmaker')
 
-apiGatewayEndpoint = "https://7l6fx6h5y5.execute-api.us-east-2.amazonaws.com"
+apiGatewayEndpoint = "https://58qoxrb6bl.execute-api.us-east-2.amazonaws.com"
 
-app = FastAPI(servers=[{"url": apiGatewayEndpoint, "description": "AWS API Gateway"}])
+app = FastAPI(servers=[{"url": apiGatewayEndpoint, "description": "AWS API Gateway"}], title="Plant Database API")
 
 
 # Dependency to get the database session
@@ -58,7 +56,7 @@ async def shutdown():
     await database.disconnect()
 
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 async def root():
     return {"message": "Hello World"}
 
@@ -69,18 +67,32 @@ def get_api_key(api_key: str = Header(...)):
     return api_key
 
 
-@app.post("/run_select_query/", openapi_extra={"x-openai-isConsequential": False}, operation_id="runSelectQuery")
-async def run_select_query(query: str, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    # Check that only SELECT statements are allowed
-    if not query.strip().lower().startswith("select"):
-        raise HTTPException(status_code=400, detail="Only SELECT statements are allowed.")
+# @app.post("/run_select_query/", openapi_extra={"x-openai-isConsequential": False}, operation_id="runSelectQuery")
+# async def run_select_query(query: str, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+#     # Check that only SELECT statements are allowed
+#     if not query.strip().lower().startswith("select"):
+#         raise HTTPException(status_code=400, detail="Only SELECT statements are allowed.")
+#
+#     # Execute the query safely
+#     try:
+#         result = db.execute(query).fetchall()
+#         return result
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
 
-    # Execute the query safely
-    try:
-        result = db.execute(query).fetchall()
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+
+# READ seeds
+@app.get("/seeds/{seed_id}", response_model=Union[List[models.Seed], models.Seed],
+         openapi_extra={"x-openai-isConsequential": False},
+         operation_id="readSeed")
+def read_seed(seed_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    if seed_id is None:
+        return db.query(schema.Seed).all()
+    else:
+        seed = db.query(schema.Seed).filter(schema.Seed.seed_id == seed_id).first()
+        if seed is None:
+            raise HTTPException(status_code=404, detail="Seed not found")
+        return seed
 
 
 # INSERT/UPDATE a new seed
@@ -101,23 +113,6 @@ def upsert_seed(seed: models.Seed, db: Session = Depends(get_db), api_key: str =
         return db_seed
 
 
-# READ all seeds
-@app.get("/seeds/", response_model=List[models.Seed], openapi_extra={"x-openai-isConsequential": False},
-         operation_id="readAllSeeds")
-def read_seeds(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    return db.query(schema.Seed).all()
-
-
-# READ a single seed by ID
-@app.get("/seeds/{seed_id}", response_model=models.Seed, openapi_extra={"x-openai-isConsequential": False},
-         operation_id="readSeed")
-def read_seed(seed_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    seed = db.query(schema.Seed).filter(schema.Seed.seed_id == seed_id).first()
-    if seed is None:
-        raise HTTPException(status_code=404, detail="Seed not found")
-    return seed
-
-
 # DELETE a seed by ID
 @app.delete("/seeds/{seed_id}", response_model=models.Seed, openapi_extra={"x-openai-isConsequential": True},
             operation_id="deleteSeed")
@@ -128,6 +123,20 @@ def delete_seed(seed_id: int, db: Session = Depends(get_db), api_key: str = Depe
     db.delete(seed)
     db.commit()
     return seed
+
+
+# READ germinations
+@app.get("/germinations/{germination_id}", response_model=Union[List[models.Germination], models.Germination],
+         openapi_extra={"x-openai-isConsequential": False}, operation_id="readGermination")
+def read_germination(germination_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    if germination_id is None:
+        return db.query(schema.Germination).all()
+    else:
+        germination = db.query(schema.Germination).filter(
+            schema.Germination.germination_id == germination_id).first()
+        if germination is None:
+            raise HTTPException(status_code=404, detail="Germination not found")
+        return germination
 
 
 # INSERT/UPDATE a new germination
@@ -150,23 +159,6 @@ def upsert_germination(germination: models.Germination, db: Session = Depends(ge
         return db_germination
 
 
-# READ all germinations
-@app.get("/germinations/", response_model=List[models.Germination], openapi_extra={"x-openai-isConsequential": False},
-         operation_id="readAllGerminations")
-def read_germinations(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    return db.query(schema.Germination).all()
-
-
-# READ a single germination by ID
-@app.get("/germinations/{germination_id}", response_model=models.Germination,
-         openapi_extra={"x-openai-isConsequential": False}, operation_id="readGermination")
-def read_germination(germination_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    germination = db.query(schema.Germination).filter(schema.Germination.germination_id == germination_id).first()
-    if germination is None:
-        raise HTTPException(status_code=404, detail="Germination not found")
-    return germination
-
-
 # DELETE a germination by ID
 @app.delete("/germinations/{germination_id}", response_model=models.Germination,
             openapi_extra={"x-openai-isConsequential": True}, operation_id="deleteGermination")
@@ -177,6 +169,19 @@ def delete_germination(germination_id: int, db: Session = Depends(get_db), api_k
     db.delete(germination)
     db.commit()
     return germination
+
+
+# READ plants
+@app.get("/plants/{plant_id}", response_model=Union[List[models.Plant], models.Plant],
+         openapi_extra={"x-openai-isConsequential": False}, operation_id="readPlant")
+def read_plant(plant_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    if plant_id is None:
+        return db.query(schema.Plant).all()
+    else:
+        plant = db.query(schema.Plant).filter(schema.Plant.plant_id == plant_id).first()
+        if plant is None:
+            raise HTTPException(status_code=404, detail="Plant not found")
+        return plant
 
 
 # INSERT/UPDATE a new plant
@@ -197,23 +202,6 @@ def upsert_plant(plant: models.Plant, db: Session = Depends(get_db), api_key: st
         return db_plant
 
 
-# READ all plants
-@app.get("/plants/", response_model=List[models.Plant], openapi_extra={"x-openai-isConsequential": False},
-         operation_id="readAllPlants")
-def read_plants(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    return db.query(schema.Plant).all()
-
-
-# READ a single plant by ID
-@app.get("/plants/{plant_id}", response_model=models.Plant, openapi_extra={"x-openai-isConsequential": False},
-         operation_id="readPlant")
-def read_plant(plant_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    plant = db.query(schema.Plant).filter(schema.Plant.plant_id == plant_id).first()
-    if plant is None:
-        raise HTTPException(status_code=404, detail="Plant not found")
-    return plant
-
-
 # DELETE a plant by ID
 @app.delete("/plants/{plant_id}", response_model=models.Plant, openapi_extra={"x-openai-isConsequential": True},
             operation_id="deletePlant")
@@ -224,6 +212,19 @@ def delete_plant(plant_id: int, db: Session = Depends(get_db), api_key: str = De
     db.delete(plant)
     db.commit()
     return plant
+
+
+# READ yields
+@app.get("/yields/{yield_id}", response_model=Union[List[models.Yield], models.Yield],
+         openapi_extra={"x-openai-isConsequential": False}, operation_id="readYield")
+def read_yield(yield_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    if yield_id is None:
+        return db.query(schema.Yield).all()
+    else:
+        yield_ = db.query(schema.Yield).filter(schema.Yield.yield_id == yield_id).first()
+        if yield_ is None:
+            raise HTTPException(status_code=404, detail="Yield not found")
+        return yield_
 
 
 # INSERT/UPDATE a new yield
@@ -244,23 +245,6 @@ def upsert_yield(yield_: models.Yield, db: Session = Depends(get_db), api_key: s
         return db_yield
 
 
-# READ all yields
-@app.get("/yields/", response_model=List[models.Yield], openapi_extra={"x-openai-isConsequential": False},
-         operation_id="readAllYields")
-def read_yields(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    return db.query(schema.Yield).all()
-
-
-# READ a single yield by ID
-@app.get("/yields/{yield_id}", response_model=models.Yield, openapi_extra={"x-openai-isConsequential": False},
-         operation_id="readYield")
-def read_yield(yield_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    yield_ = db.query(schema.Yield).filter(schema.Yield.yield_id == yield_id).first()
-    if yield_ is None:
-        raise HTTPException(status_code=404, detail="Yield not found")
-    return yield_
-
-
 # DELETE a yield by ID
 @app.delete("/yields/{yield_id}", response_model=models.Yield, openapi_extra={"x-openai-isConsequential": True},
             operation_id="deleteYield")
@@ -271,6 +255,19 @@ def delete_yield(yield_id: int, db: Session = Depends(get_db), api_key: str = De
     db.delete(yield_)
     db.commit()
     return yield_
+
+
+# READ plant_crosses
+@app.get("/plant_crosses/{cross_id}", response_model=Union[List[models.PlantCross], models.PlantCross],
+         openapi_extra={"x-openai-isConsequential": False}, operation_id="readPlantCross")
+def read_plant_cross(cross_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    if cross_id is None:
+        return db.query(schema.PlantCross).all()
+    else:
+        plant_cross = db.query(schema.PlantCross).filter(schema.PlantCross.cross_id == cross_id).first()
+        if plant_cross is None:
+            raise HTTPException(status_code=404, detail="PlantCross not found")
+        return plant_cross
 
 
 # INSERT/UPDATE a new plant_cross
@@ -292,23 +289,6 @@ def upsert_plant_cross(plant_cross: models.PlantCross, db: Session = Depends(get
         return db_plant_cross
 
 
-# READ all plant_crosses
-@app.get("/plant_crosses/", response_model=List[models.PlantCross], openapi_extra={"x-openai-isConsequential": False},
-         operation_id="readAllPlantCrosses")
-def read_plant_crosses(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    return db.query(schema.PlantCross).all()
-
-
-# READ a single plant_cross by ID
-@app.get("/plant_crosses/{cross_id}", response_model=models.PlantCross,
-         openapi_extra={"x-openai-isConsequential": False}, operation_id="readPlantCross")
-def read_plant_cross(cross_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    plant_cross = db.query(schema.PlantCross).filter(schema.PlantCross.cross_id == cross_id).first()
-    if plant_cross is None:
-        raise HTTPException(status_code=404, detail="PlantCross not found")
-    return plant_cross
-
-
 # DELETE a plant_cross by ID
 @app.delete("/plant_crosses/{cross_id}", response_model=models.PlantCross,
             openapi_extra={"x-openai-isConsequential": True}, operation_id="deletePlantCross")
@@ -319,6 +299,19 @@ def delete_plant_cross(cross_id: int, db: Session = Depends(get_db), api_key: st
     db.delete(plant_cross)
     db.commit()
     return plant_cross
+
+
+# READ plant_plant_crosses
+@app.get("/plant_plant_crosses/{id}", response_model=Union[List[models.PlantPlantCross], models.PlantPlantCross],
+         openapi_extra={"x-openai-isConsequential": False}, operation_id="readPlantPlantCross")
+def read_plant_plant_cross(id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    if id is None:
+        return db.query(schema.PlantPlantCross).all()
+    else:
+        plant_plant_cross = db.query(schema.PlantPlantCross).filter(schema.PlantPlantCross.id == id).first()
+        if plant_plant_cross is None:
+            raise HTTPException(status_code=404, detail="PlantPlantCross not found")
+        return plant_plant_cross
 
 
 # INSERT/UPDATE a new plant_plant_cross
@@ -341,23 +334,6 @@ def upsert_plant_plant_cross(plant_plant_cross: models.PlantPlantCross, db: Sess
         return db_plant_plant_cross
 
 
-# READ all plant_plant_crosses
-@app.get("/plant_plant_crosses/", response_model=List[models.PlantPlantCross],
-         openapi_extra={"x-openai-isConsequential": False}, operation_id="readAllPlantPlantCrosses")
-def read_plant_plant_crosses(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    return db.query(schema.PlantPlantCross).all()
-
-
-# READ a single plant_plant_cross by ID
-@app.get("/plant_plant_crosses/{id}", response_model=models.PlantPlantCross,
-         openapi_extra={"x-openai-isConsequential": False}, operation_id="readPlantPlantCross")
-def read_plant_plant_cross(id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    plant_plant_cross = db.query(schema.PlantPlantCross).filter(schema.PlantPlantCross.id == id).first()
-    if plant_plant_cross is None:
-        raise HTTPException(status_code=404, detail="PlantPlantCross not found")
-    return plant_plant_cross
-
-
 # DELETE a plant_plant_cross by ID
 @app.delete("/plant_plant_crosses/{id}", response_model=models.PlantPlantCross,
             openapi_extra={"x-openai-isConsequential": True}, operation_id="deletePlantPlantCross")
@@ -368,6 +344,19 @@ def delete_plant_plant_cross(id: int, db: Session = Depends(get_db), api_key: st
     db.delete(plant_plant_cross)
     db.commit()
     return plant_plant_cross
+
+
+# READ taste_tests
+@app.get("/taste_tests/{taste_test_id}", response_model=Union[List[models.TasteTest], models.TasteTest],
+         openapi_extra={"x-openai-isConsequential": False}, operation_id="readTasteTest")
+def read_taste_test(taste_test_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    if taste_test_id is None:
+        return db.query(schema.TasteTest).all()
+    else:
+        taste_test = db.query(schema.TasteTest).filter(schema.TasteTest.taste_test_id == taste_test_id).first()
+        if taste_test is None:
+            raise HTTPException(status_code=404, detail="TasteTest not found")
+        return taste_test
 
 
 # INSERT/UPDATE a new taste_test
@@ -389,23 +378,6 @@ def upsert_taste_test(taste_test: models.TasteTest, db: Session = Depends(get_db
         return db_taste_test
 
 
-# READ all taste_tests
-@app.get("/taste_tests/", response_model=List[models.TasteTest], openapi_extra={"x-openai-isConsequential": False},
-         operation_id="readAllTasteTests")
-def read_taste_tests(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    return db.query(schema.TasteTest).all()
-
-
-# READ a single taste_test by ID
-@app.get("/taste_tests/{taste_test_id}", response_model=models.TasteTest,
-         openapi_extra={"x-openai-isConsequential": False}, operation_id="readTasteTest")
-def read_taste_test(taste_test_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    taste_test = db.query(schema.TasteTest).filter(schema.TasteTest.taste_test_id == taste_test_id).first()
-    if taste_test is None:
-        raise HTTPException(status_code=404, detail="TasteTest not found")
-    return taste_test
-
-
 # DELETE a taste_test by ID
 @app.delete("/taste_tests/{taste_test_id}", response_model=models.TasteTest,
             openapi_extra={"x-openai-isConsequential": True}, operation_id="deleteTasteTest")
@@ -416,6 +388,20 @@ def delete_taste_test(taste_test_id: int, db: Session = Depends(get_db), api_key
     db.delete(taste_test)
     db.commit()
     return taste_test
+
+
+# READ observations
+@app.get("/observations/{observation_id}", response_model=Union[List[models.Observation], models.Observation],
+         openapi_extra={"x-openai-isConsequential": False}, operation_id="readObservation")
+def read_observation(observation_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    if observation_id is None:
+        return db.query(schema.Observation).all()
+    else:
+        observation = db.query(schema.Observation).filter(
+            schema.Observation.observation_id == observation_id).first()
+        if observation is None:
+            raise HTTPException(status_code=404, detail="Observation not found")
+        return observation
 
 
 # INSERT/UPDATE a new observation
@@ -438,24 +424,7 @@ def upsert_observation(observation: models.Observation, db: Session = Depends(ge
         return db_observation
 
 
-# READ all observations
-@app.get("/observations/", response_model=List[models.Observation], openapi_extra={"x-openai-isConsequential": False},
-         operation_id="readAllObservations")
-def read_observations(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    return db.query(schema.Observation).all()
-
-
-# READ a single observation by ID
-@app.get("/observations/{observation_id}", response_model=models.Observation,
-         openapi_extra={"x-openai-isConsequential": False}, operation_id="readObservation")
-def read_observation(observation_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    observation = db.query(schema.Observation).filter(schema.Observation.observation_id == observation_id).first()
-    if observation is None:
-        raise HTTPException(status_code=404, detail="Observation not found")
-    return observation
-
-
-# DELETE a observation by ID
+# DELETE an observation by ID
 @app.delete("/observations/{observation_id}", response_model=models.Observation,
             openapi_extra={"x-openai-isConsequential": True}, operation_id="deleteObservation")
 def delete_observation(observation_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
@@ -465,6 +434,21 @@ def delete_observation(observation_id: int, db: Session = Depends(get_db), api_k
     db.delete(observation)
     db.commit()
     return observation
+
+
+# READ hydroponic_systems
+@app.get("/hydroponic_systems/{system_id}",
+         response_model=Union[List[models.HydroponicSystem], models.HydroponicSystem],
+         openapi_extra={"x-openai-isConsequential": False}, operation_id="readHydroponicSystem")
+def read_hydroponic_system(system_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    if system_id is None:
+        return db.query(schema.HydroponicSystem).all()
+    else:
+        hydroponic_system = db.query(schema.HydroponicSystem).filter(
+            schema.HydroponicSystem.system_id == system_id).first()
+        if hydroponic_system is None:
+            raise HTTPException(status_code=404, detail="HydroponicSystem not found")
+        return hydroponic_system
 
 
 # INSERT/UPDATE a new hydroponic_system
@@ -487,24 +471,6 @@ def upsert_hydroponic_system(hydroponic_system: models.HydroponicSystem, db: Ses
         return db_hydroponic_system
 
 
-# READ all hydroponic_systems
-@app.get("/hydroponic_systems/", response_model=List[models.HydroponicSystem],
-         openapi_extra={"x-openai-isConsequential": False}, operation_id="readAllHydroponicSystems")
-def read_hydroponic_systems(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    return db.query(schema.HydroponicSystem).all()
-
-
-# READ a single hydroponic_system by ID
-@app.get("/hydroponic_systems/{system_id}", response_model=models.HydroponicSystem,
-         openapi_extra={"x-openai-isConsequential": False}, operation_id="readHydroponicSystem")
-def read_hydroponic_system(system_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    hydroponic_system = db.query(schema.HydroponicSystem).filter(
-        schema.HydroponicSystem.system_id == system_id).first()
-    if hydroponic_system is None:
-        raise HTTPException(status_code=404, detail="HydroponicSystem not found")
-    return hydroponic_system
-
-
 # DELETE a hydroponic_system by ID
 @app.delete("/hydroponic_systems/{system_id}", response_model=models.HydroponicSystem,
             openapi_extra={"x-openai-isConsequential": True}, operation_id="deleteHydroponicSystem")
@@ -516,6 +482,21 @@ def delete_hydroponic_system(system_id: int, db: Session = Depends(get_db), api_
     db.delete(hydroponic_system)
     db.commit()
     return hydroponic_system
+
+
+# READ hydroponic_conditions
+@app.get("/hydroponic_conditions/{condition_id}",
+         response_model=Union[List[models.HydroponicCondition], models.HydroponicCondition],
+         openapi_extra={"x-openai-isConsequential": False}, operation_id="readHydroponicCondition")
+def read_hydroponic_condition(condition_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    if condition_id is None:
+        return db.query(schema.HydroponicCondition).all()
+    else:
+        hydroponic_condition = db.query(schema.HydroponicCondition).filter(
+            schema.HydroponicCondition.condition_id == condition_id).first()
+        if hydroponic_condition is None:
+            raise HTTPException(status_code=404, detail="HydroponicCondition not found")
+        return hydroponic_condition
 
 
 # INSERT/UPDATE a new hydroponic_condition
@@ -536,24 +517,6 @@ def upsert_hydroponic_condition(hydroponic_condition: models.HydroponicCondition
             setattr(db_hydroponic_condition, key, value)
         db.commit()
         return db_hydroponic_condition
-
-
-# READ all hydroponic_conditions
-@app.get("/hydroponic_conditions/", response_model=List[models.HydroponicCondition],
-         openapi_extra={"x-openai-isConsequential": False}, operation_id="readAllHydroponicConditions")
-def read_hydroponic_conditions(db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    return db.query(schema.HydroponicCondition).all()
-
-
-# READ a single hydroponic_condition by ID
-@app.get("/hydroponic_conditions/{condition_id}", response_model=models.HydroponicCondition,
-         openapi_extra={"x-openai-isConsequential": False}, operation_id="readHydroponicCondition")
-def read_hydroponic_condition(condition_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    hydroponic_condition = db.query(schema.HydroponicCondition).filter(
-        schema.HydroponicCondition.condition_id == condition_id).first()
-    if hydroponic_condition is None:
-        raise HTTPException(status_code=404, detail="HydroponicCondition not found")
-    return hydroponic_condition
 
 
 # DELETE a hydroponic_condition by ID

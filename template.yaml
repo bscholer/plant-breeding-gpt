@@ -18,31 +18,22 @@ Globals:
 Parameters:
   DbPassword:
     Type: String
-  DbHost:
+  DbStackName:
     Type: String
-    Default: plantsdb.cp4pnzol4blt.us-east-2.rds.amazonaws.com
+    Default: plants-db-stack
   ApiKey:
     Type: String
 
 Resources:
-  # Define the Aurora DB instance within the cluster
-  PlantsDBInstance:
-    Type: AWS::RDS::DBInstance
+  # CloudWatch Log Group for API Gateway Access Logs
+  ApiGatewayLogGroup:
+    Type: AWS::Logs::LogGroup
     Properties:
-      DBInstanceClass: db.t2.micro # Choose an instance size appropriate for your needs
-      AllocatedStorage: 20
-      Engine: MySql
-      MasterUsername: bscholer
-      MasterUserPassword: !Ref DbPassword
-      BackupRetentionPeriod: 7
-      DBInstanceIdentifier: plantsdb
-      PubliclyAccessible: true
-      MultiAZ: false
-      VPCSecurityGroups:
-        - !Ref PlantsDBSecurityGroup
+      LogGroupName: !Sub "/aws/vendedlogs/apis/${AWS::StackName}/accesslogs"
+      RetentionInDays: 30
 
-  PlantsApiFunction:
-    Type: AWS::Serverless::Function 
+  PlantsFastApiFunction:
+    Type: AWS::Serverless::Function
     Properties:
       CodeUri: api
       Handler: main.handler
@@ -51,13 +42,15 @@ Resources:
       Timeout: 30
       Events:
         ApiEvent:
-          Type: HttpApi # Using http API Gateway
+          Type: HttpApi
           Properties:
+            # ApiId: !Ref PlantsFastHttpApi
             Path: /{proxy+}
             Method: ANY
       Environment:
         Variables:
-          DB_HOST: !Ref DbHost
+          DB_HOST:
+            Fn::ImportValue: !Sub "${DbStackName}-PlantsDBInstanceEndpoint"
           DB_NAME: plants
           DB_USER: bscholer
           DB_PASSWORD: !Ref DbPassword
@@ -69,62 +62,17 @@ Resources:
       Description: "Trigger Lambda function every 5 minutes to keep it warm"
       ScheduleExpression: "rate(5 minutes)"
       Targets:
-        - Arn: !GetAtt PlantsApiFunction.Arn
+        - Arn: !GetAtt PlantsFastApiFunction.Arn
           Id: "TargetFunctionV1"
       State: "ENABLED"
-  #
-  # PlantsApiDomain:
-  #   Type: AWS::ApiGatewayV2::DomainName
-  #   Properties:
-  #     DomainName: plants.benscholer.com
-  #     DomainNameConfigurations:
-  #       - CertificateArn: arn:aws:acm:us-east-2:856608212549:certificate/08a1fcdd-6a3b-4cec-ac20-6b9a036ccb95
-  #
-  # PlantsApiMapping:
-  #   Type: AWS::ApiGatewayV2::ApiMapping
-  #   Properties:
-  #     DomainName: !Ref PlantsApiDomain
-  #     ApiId: !Ref PlantsApiFunction
-  #     Stage: $default
-  #
-  # DnsRecordForPlantsApi:
-  #   Type: AWS::Route53::RecordSetGroup
-  #   Properties:
-  #     HostedZoneName: benscholer.com.
-  #     RecordSets:
-  #       - Name: plants.benscholer.com.
-  #         Type: A
-  #         AliasTarget:
-  #           DNSName: !GetAtt PlantsApiDomain.RegionalDomainName
-  #           HostedZoneId: !GetAtt PlantsApiDomain.RegionalHostedZoneId
 
   PermissionForEventsToInvokeLambda:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref PlantsApiFunction
+      FunctionName: !Ref PlantsFastApiFunction
       Action: "lambda:InvokeFunction"
       Principal: "events.amazonaws.com"
       SourceArn: !GetAtt KeepWarmSchedule.Arn
-
-  PlantsDBSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Security Group for RDS instance
-      VpcId: vpc-028c3496e13f72931
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 3306
-          ToPort: 3306
-          CidrIp: 0.0.0.0/0 # CAUTION: This allows access from anywhere; replace with your IP range for better security.
-
-  PlantsDBSubnetGroup:
-    Type: AWS::RDS::DBSubnetGroup
-    Properties:
-      DBSubnetGroupDescription: Subnet Group for RDS instance
-      SubnetIds:
-        - subnet-0a30b44d7751634e7
-        - subnet-0eecad349c2b65f7e
-        - subnet-01125b4201472f22c
 
   ApplicationResourceGroup:
     Type: AWS::ResourceGroups::Group
@@ -141,14 +89,6 @@ Resources:
       AutoConfigurationEnabled: "true"
 
 Outputs:
-  RDSInstanceEndpoint:
-    Description: "The endpoint of the RDS instance"
-    Value: !GetAtt PlantsDBInstance.Endpoint.Address
-
-  RDSSecurityGroup:
-    Description: "The Security Group ID of the RDS instance"
-    Value: !Ref PlantsDBSecurityGroup
-
   PlantsApi:
     Description: "API Gateway endpoint URL for Prod environment"
-    Value: !Sub "https://${PlantsApiFunction}.execute-api.${AWS::Region}.amazonaws.com/"
+    Value: !Sub "https://${PlantsFastHttpApi}.execute-api.${AWS::Region}.amazonaws.com/"

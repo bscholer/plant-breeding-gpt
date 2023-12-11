@@ -19,7 +19,7 @@ Resources:
       MasterUsername: bscholer
       MasterUserPassword: !Ref DbPassword
       BackupRetentionPeriod: 30
-      DBInstanceIdentifier: plantsmysqldb
+      DBInstanceIdentifier: plants-database
       PubliclyAccessible: true
       MultiAZ: false
       VPCSecurityGroups:

@@ -2,6 +2,7 @@ import logging
 import os
 from typing import List, Union
 
+import sqlparse
 from databases import Database
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Depends, Header
@@ -32,7 +33,7 @@ database = Database(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 print('created sessionmaker')
 
-apiGatewayEndpoint = "https://58qoxrb6bl.execute-api.us-east-2.amazonaws.com"
+apiGatewayEndpoint = "https://0ybnxa9zak.execute-api.us-east-2.amazonaws.com"
 
 app = FastAPI(servers=[{"url": apiGatewayEndpoint, "description": "AWS API Gateway"}], title="Plant Database API")
 
@@ -67,26 +68,57 @@ def get_api_key(api_key: str = Header(...)):
     return api_key
 
 
-# @app.post("/run_select_query/", openapi_extra={"x-openai-isConsequential": False}, operation_id="runSelectQuery")
-# async def run_select_query(query: str, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-#     # Check that only SELECT statements are allowed
-#     if not query.strip().lower().startswith("select"):
-#         raise HTTPException(status_code=400, detail="Only SELECT statements are allowed.")
-#
-#     # Execute the query safely
-#     try:
-#         result = db.execute(query).fetchall()
-#         return result
-#     except Exception as e:
-#         raise HTTPException(status_code=400, detail=str(e))
+def has_subquery(parsed_query):
+    for token in parsed_query.tokens:
+        if isinstance(token, sqlparse.sql.Parenthesis):
+            subquery = token.get_real_name()
+            if subquery.strip().lower().startswith("select"):
+                return True
+    return False
+
+
+def is_select_only_subquery(subquery):
+    for token in subquery.tokens:
+        if isinstance(token, sqlparse.sql.Token) and token.value.lower() not in (
+                "select", "from", "where", "join", "left", "right", "inner", "outer"):
+            return False
+    return True
+
+
+@app.post("/run_select_query/", openapi_extra={"x-openai-isConsequential": False}, operation_id="runSelectQuery")
+async def run_select_query(query: str, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    # Parse the SQL query to check if it's a SELECT statement
+    parsed_query = sqlparse.parse(query)
+
+    # Check that the first token is a SELECT keyword
+    if not parsed_query:
+        raise HTTPException(status_code=400, detail="Invalid SQL query.")
+
+    first_token = parsed_query[0].tokens[0].value.lower()
+    if first_token != "select":
+        raise HTTPException(status_code=400, detail="Only SELECT statements are allowed.")
+
+    # Check for subqueries in the parsed query
+    if has_subquery(parsed_query[0]):
+        for subquery in parsed_query[0].get_sublists():
+            if not is_select_only_subquery(subquery):
+                raise HTTPException(status_code=400, detail="Subqueries must be SELECT-only.")
+
+    # Execute the query safely
+    try:
+        result = db.execute(query).fetchall()
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 # READ seeds
 @app.get("/seeds/{seed_id}", response_model=Union[List[models.Seed], models.Seed],
          openapi_extra={"x-openai-isConsequential": False},
+         description="Returns a list of seeds if no seed_id (or 0) is specified, otherwise returns a single seed.",
          operation_id="readSeed")
 def read_seed(seed_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    if seed_id is None:
+    if not seed_id:
         return db.query(schema.Seed).all()
     else:
         seed = db.query(schema.Seed).filter(schema.Seed.seed_id == seed_id).first()
@@ -127,9 +159,10 @@ def delete_seed(seed_id: int, db: Session = Depends(get_db), api_key: str = Depe
 
 # READ germinations
 @app.get("/germinations/{germination_id}", response_model=Union[List[models.Germination], models.Germination],
+         description="Returns all germinations if no germination_id (or 0) is specified, otherwise returns a single germination",
          openapi_extra={"x-openai-isConsequential": False}, operation_id="readGermination")
 def read_germination(germination_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    if germination_id is None:
+    if not germination_id:
         return db.query(schema.Germination).all()
     else:
         germination = db.query(schema.Germination).filter(
@@ -173,9 +206,10 @@ def delete_germination(germination_id: int, db: Session = Depends(get_db), api_k
 
 # READ plants
 @app.get("/plants/{plant_id}", response_model=Union[List[models.Plant], models.Plant],
+         description="Returns all plants if no plant_id (or 0) is specified, otherwise returns a single plant",
          openapi_extra={"x-openai-isConsequential": False}, operation_id="readPlant")
 def read_plant(plant_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    if plant_id is None:
+    if not plant_id:
         return db.query(schema.Plant).all()
     else:
         plant = db.query(schema.Plant).filter(schema.Plant.plant_id == plant_id).first()
@@ -216,9 +250,10 @@ def delete_plant(plant_id: int, db: Session = Depends(get_db), api_key: str = De
 
 # READ yields
 @app.get("/yields/{yield_id}", response_model=Union[List[models.Yield], models.Yield],
+         description="Returns all yields if no yield_id (or 0) is specified, otherwise returns a single yield",
          openapi_extra={"x-openai-isConsequential": False}, operation_id="readYield")
 def read_yield(yield_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    if yield_id is None:
+    if not yield_id:
         return db.query(schema.Yield).all()
     else:
         yield_ = db.query(schema.Yield).filter(schema.Yield.yield_id == yield_id).first()
@@ -259,9 +294,10 @@ def delete_yield(yield_id: int, db: Session = Depends(get_db), api_key: str = De
 
 # READ plant_crosses
 @app.get("/plant_crosses/{cross_id}", response_model=Union[List[models.PlantCross], models.PlantCross],
+         description="Returns all plant_crosses if no cross_id (or 0) is specified, otherwise returns a single plant_cross",
          openapi_extra={"x-openai-isConsequential": False}, operation_id="readPlantCross")
 def read_plant_cross(cross_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    if cross_id is None:
+    if not cross_id:
         return db.query(schema.PlantCross).all()
     else:
         plant_cross = db.query(schema.PlantCross).filter(schema.PlantCross.cross_id == cross_id).first()
@@ -303,9 +339,10 @@ def delete_plant_cross(cross_id: int, db: Session = Depends(get_db), api_key: st
 
 # READ plant_plant_crosses
 @app.get("/plant_plant_crosses/{id}", response_model=Union[List[models.PlantPlantCross], models.PlantPlantCross],
+         description="Returns all plant_plant_crosses if no id (or 0) is specified, otherwise returns a single plant_plant_cross",
          openapi_extra={"x-openai-isConsequential": False}, operation_id="readPlantPlantCross")
 def read_plant_plant_cross(id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    if id is None:
+    if not id:
         return db.query(schema.PlantPlantCross).all()
     else:
         plant_plant_cross = db.query(schema.PlantPlantCross).filter(schema.PlantPlantCross.id == id).first()
@@ -348,9 +385,10 @@ def delete_plant_plant_cross(id: int, db: Session = Depends(get_db), api_key: st
 
 # READ taste_tests
 @app.get("/taste_tests/{taste_test_id}", response_model=Union[List[models.TasteTest], models.TasteTest],
+         description="Returns all taste_tests if no taste_test_id (or 0) is specified, otherwise returns a single taste_test",
          openapi_extra={"x-openai-isConsequential": False}, operation_id="readTasteTest")
 def read_taste_test(taste_test_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    if taste_test_id is None:
+    if not taste_test_id:
         return db.query(schema.TasteTest).all()
     else:
         taste_test = db.query(schema.TasteTest).filter(schema.TasteTest.taste_test_id == taste_test_id).first()
@@ -392,9 +430,10 @@ def delete_taste_test(taste_test_id: int, db: Session = Depends(get_db), api_key
 
 # READ observations
 @app.get("/observations/{observation_id}", response_model=Union[List[models.Observation], models.Observation],
+         description="Returns all observations if no observation_id (or 0) is specified, otherwise returns a single observation",
          openapi_extra={"x-openai-isConsequential": False}, operation_id="readObservation")
 def read_observation(observation_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    if observation_id is None:
+    if not observation_id:
         return db.query(schema.Observation).all()
     else:
         observation = db.query(schema.Observation).filter(
@@ -439,9 +478,10 @@ def delete_observation(observation_id: int, db: Session = Depends(get_db), api_k
 # READ hydroponic_systems
 @app.get("/hydroponic_systems/{system_id}",
          response_model=Union[List[models.HydroponicSystem], models.HydroponicSystem],
+         description="Returns all hydroponic_systems if no system_id (or 0) is specified, otherwise returns a single hydroponic_system",
          openapi_extra={"x-openai-isConsequential": False}, operation_id="readHydroponicSystem")
 def read_hydroponic_system(system_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    if system_id is None:
+    if not system_id:
         return db.query(schema.HydroponicSystem).all()
     else:
         hydroponic_system = db.query(schema.HydroponicSystem).filter(
@@ -487,9 +527,10 @@ def delete_hydroponic_system(system_id: int, db: Session = Depends(get_db), api_
 # READ hydroponic_conditions
 @app.get("/hydroponic_conditions/{condition_id}",
          response_model=Union[List[models.HydroponicCondition], models.HydroponicCondition],
+         description="Returns all hydroponic_conditions if no condition_id (or 0) is specified, otherwise returns a single hydroponic_condition",
          openapi_extra={"x-openai-isConsequential": False}, operation_id="readHydroponicCondition")
 def read_hydroponic_condition(condition_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    if condition_id is None:
+    if not condition_id:
         return db.query(schema.HydroponicCondition).all()
     else:
         hydroponic_condition = db.query(schema.HydroponicCondition).filter(

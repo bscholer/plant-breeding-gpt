@@ -9,9 +9,11 @@ class Seed(BaseModel):
     Used to create a new seed.
     """
     seed_id: Optional[int] = Field(None, description='id')
+    yield_id: Optional[int] = Field(None, description='Yield ID (FK) - Optional')
     number_of_seeds: Optional[int] = Field(..., description='Number of Seeds - Optional')
     species: Optional[str] = Field(..., description='Species')
     variety: Optional[str] = Field(..., description='Variety')
+    heirloom: Optional[int] = Field(..., description='Heirloom (1 if true, 0 if false) - Optional')
     comments: Optional[str] = Field(None, description='Comments - Optional')
 
 

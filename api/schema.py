@@ -12,6 +12,7 @@ class Seed(Base):
     species = Column(String(255), nullable=True)
     variety = Column(String(255), nullable=True)
     number_of_seeds = Column(Integer, nullable=True)
+    heirloom = Column(Integer, nullable=True)
     comments = Column(Text, nullable=True)
 
 

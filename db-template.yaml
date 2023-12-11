@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  pepper-pod-pal-db
+
+  Sample SAM Template for pepper-pod-pal database
+
+Parameters:
+  DbPassword:
+    Type: String
+
+Resources:
+  PlantsDBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceClass: db.t2.micro
+      AllocatedStorage: 20
+      Engine: MySql
+      MasterUsername: bscholer
+      MasterUserPassword: !Ref DbPassword
+      BackupRetentionPeriod: 30
+      DBInstanceIdentifier: plantsmysqldb
+      PubliclyAccessible: true
+      MultiAZ: false
+      VPCSecurityGroups:
+        - !Ref PlantsDBSecurityGroup
+
+  PlantsDBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group for RDS instance
+      VpcId: vpc-028c3496e13f72931
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: 0.0.0.0/0 # CAUTION: This allows access from anywhere; replace with your IP range for better security.
+
+  PlantsDBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet Group for RDS instance
+      SubnetIds:
+        - subnet-0a30b44d7751634e7
+        - subnet-0eecad349c2b65f7e
+        - subnet-01125b4201472f22c
+
+Outputs:
+  RDSInstanceEndpoint:
+    Description: "The endpoint of the RDS instance"
+    Value: !GetAtt PlantsDBInstance.Endpoint.Address
+    Export:
+      Name:
+        "Fn::Sub": "${AWS::StackName}-PlantsDBInstanceEndpoint"
+
+  RDSSecurityGroup:
+    Description: "The Security Group ID of the RDS instance"
+    Value: !Ref PlantsDBSecurityGroup

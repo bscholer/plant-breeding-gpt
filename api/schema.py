@@ -31,8 +31,9 @@ class Germination(Base):
 class Plant(Base):
     __tablename__ = 'plants'
     plant_id = Column(Integer, primary_key=True, autoincrement=True)
-    germination_id = Column(Integer, ForeignKey('germination.germination_id'))
+    germination_id = Column(Integer, ForeignKey('germination.germination_id'), nullable=True)
     system_id = Column(Integer, ForeignKey('hydroponic_system.system_id'), nullable=True)
+    planted_date = Column(Date, nullable=True)
     death_date = Column(Date, nullable=True)
     comments = Column(Text, nullable=True)
 

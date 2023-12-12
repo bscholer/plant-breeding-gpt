@@ -37,8 +37,9 @@ class Plant(BaseModel):
     Used to create a new plant.
     """
     plant_id: Optional[int] = Field(None, description='id')
-    germination_id: int = Field(..., description='Germination ID (FK)')
+    germination_id: Optional[int] = Field(..., description='Germination ID (FK)')
     system_id: Optional[int] = Field(..., description='Hydroponic System ID (FK)')
+    planted_date: Optional[date] = Field(None, description='Planted Date - Optional')
     death_date: Optional[date] = Field(None, description='Death Date - Optional')
     comments: Optional[str] = Field(None, description='Comments - Optional')
 

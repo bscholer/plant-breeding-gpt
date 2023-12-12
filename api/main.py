@@ -416,16 +416,17 @@ def upsert_taste_test(taste_test: models.TasteTest, db: Session = Depends(get_db
         return db_taste_test
 
 
+# Commented out to save space for the select query endpoint (30 endpoints is the limit)
 # DELETE a taste_test by ID
-@app.delete("/taste_tests/{taste_test_id}", response_model=models.TasteTest,
-            openapi_extra={"x-openai-isConsequential": True}, operation_id="deleteTasteTest")
-def delete_taste_test(taste_test_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    taste_test = db.query(schema.TasteTest).filter(schema.TasteTest.taste_test_id == taste_test_id).first()
-    if taste_test is None:
-        raise HTTPException(status_code=404, detail="TasteTest not found")
-    db.delete(taste_test)
-    db.commit()
-    return taste_test
+# @app.delete("/taste_tests/{taste_test_id}", response_model=models.TasteTest,
+#             openapi_extra={"x-openai-isConsequential": True}, operation_id="deleteTasteTest")
+# def delete_taste_test(taste_test_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+#     taste_test = db.query(schema.TasteTest).filter(schema.TasteTest.taste_test_id == taste_test_id).first()
+#     if taste_test is None:
+#         raise HTTPException(status_code=404, detail="TasteTest not found")
+#     db.delete(taste_test)
+#     db.commit()
+#     return taste_test
 
 
 # READ observations

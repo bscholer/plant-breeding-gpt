@@ -10,10 +10,10 @@ class Seed(BaseModel):
     """
     seed_id: Optional[int] = Field(None, description='id')
     yield_id: Optional[int] = Field(None, description='Yield ID (FK) - Optional')
-    number_of_seeds: Optional[int] = Field(..., description='Number of Seeds - Optional')
-    species: Optional[str] = Field(..., description='Species')
-    variety: Optional[str] = Field(..., description='Variety')
-    heirloom: Optional[int] = Field(..., description='Heirloom (1 if true, 0 if false) - Optional')
+    number_of_seeds: Optional[int] = Field(None, description='Number of Seeds - Optional')
+    species: Optional[str] = Field(None, description='Species')
+    variety: Optional[str] = Field(None, description='Variety')
+    heirloom: Optional[int] = Field(None, description='Heirloom (1 if true, 0 if false) - Optional')
     comments: Optional[str] = Field(None, description='Comments - Optional')
 
 
@@ -24,10 +24,10 @@ class Germination(BaseModel):
     """
     germination_id: Optional[int] = Field(None, description='id')
     seed_id: int = Field(..., description='Seed ID (FK)')
-    planted_date: date
-    germination_date: Optional[date]
-    seeds_attempted: int = Field(..., description='Number of seeds attempted')
-    seeds_successful: Optional[int] = Field(..., description='Number of seeds that germinated - Optional')
+    planted_date: date = Field(..., description='Planted Date - Required')
+    germination_date: Optional[date] = Field(None, description='Germination Date - Optional')
+    seeds_attempted: int = Field(None, description='Number of seeds attempted')
+    seeds_successful: Optional[int] = Field(None, description='Number of seeds that germinated - Optional')
     method: str = Field(..., description='Germination Method')
     comments: Optional[str] = Field(None, description='Comments - Optional')
 
@@ -37,8 +37,8 @@ class Plant(BaseModel):
     Used to create a new plant.
     """
     plant_id: Optional[int] = Field(None, description='id')
-    germination_id: Optional[int] = Field(..., description='Germination ID (FK)')
-    system_id: Optional[int] = Field(..., description='Hydroponic System ID (FK)')
+    germination_id: Optional[int] = Field(None, description='Germination ID (FK)')
+    system_id: Optional[int] = Field(None, description='Hydroponic System ID (FK)')
     planted_date: Optional[date] = Field(None, description='Planted Date - Optional')
     death_date: Optional[date] = Field(None, description='Death Date - Optional')
     comments: Optional[str] = Field(None, description='Comments - Optional')
@@ -49,8 +49,8 @@ class Yield(BaseModel):
     plant_id: int = Field(..., description='Plant ID (FK)')
     cross_id: Optional[int] = Field(None, description='Cross ID, include if applicable (FK) - Optional')
     date: date
-    color: str = Field(..., description='Color (e.g. "Red", "Green", etc.)')
-    texture: str = Field(..., description='Texture (e.g. "Crisp", "Tender", etc.)')
+    color: Optional[str] = Field(None, description='Color (e.g. "Red", "Green", etc.)')
+    texture: Optional[str] = Field(None, description='Texture (e.g. "Crisp", "Tender", etc.)')
     # photo: Optional[bytes] = Field(None, description='Photo')
     comments: Optional[str] = Field(None, description='Comments - Optional')
 
@@ -62,8 +62,6 @@ class PlantCross(BaseModel):
     Ensure that the user specifies the male and female plants.
     """
     cross_id: Optional[int] = Field(None, description='id')
-    # parent_1_id: int = Field(..., description='Male parent')
-    # parent_2_id: int = Field(..., description='Female parent')
     cross_date: date
     method: str = Field(..., description='Pollination Method, e.g. "Hand Pollination", "Open Pollination"')
     comments: Optional[str] = Field(None, description='Comments - Optional')
@@ -104,10 +102,10 @@ class Observation(BaseModel):
     observation_id: Optional[int] = Field(None, description='id')
     plant_id: int = Field(..., description='Plant ID (FK)')
     date: date
-    height_cm: Optional[float] = Field(..., description='Height (cm) DO NOT INPUT IF NOT MEASURED - Optional')
-    leaf_count: Optional[int] = Field(..., description='Leaf Count DO NOT INPUT IF NOT MEASURED - Optional')
-    color: Optional[str] = Field(..., description='Color of leaves (e.g. "Red", "Green", etc.) - Optional')
-    texture: Optional[str] = Field(..., description='Texture of leaves (e.g. "Crisp", "Tender", etc.) - Optional')
+    height_cm: Optional[float] = Field(None, description='Height (cm) DO NOT INPUT IF NOT MEASURED - Optional')
+    leaf_count: Optional[int] = Field(None, description='Leaf Count DO NOT INPUT IF NOT MEASURED - Optional')
+    color: Optional[str] = Field(None, description='Color of leaves (e.g. "Red", "Green", etc.) - Optional')
+    texture: Optional[str] = Field(None, description='Texture of leaves (e.g. "Crisp", "Tender", etc.) - Optional')
     # photo: Optional[bytes] = None
     comments: Optional[str] = Field(None, description='Comments - Optional')
 
@@ -128,7 +126,9 @@ class HydroponicCondition(BaseModel):
     condition_id: Optional[int] = Field(None, description='id')
     system_id: int = Field(..., description='System ID (FK)')
     date: date
-    water_ph: Optional[float] = Field(..., description='Water pH - Optional')
-    electrical_conductivity_us_cm: Optional[float] = Field(..., description='Electrical Conductivity (uS/cm) - Optional')
-    water_temperature_f: Optional[float] = Field(..., description='Water Temperature (F), convert to F if provided in C - Optional')
+    water_ph: Optional[float] = Field(None, description='Water pH - Optional')
+    electrical_conductivity_us_cm: Optional[float] = Field(None,
+                                                           description='Electrical Conductivity (uS/cm) - Optional')
+    water_temperature_f: Optional[float] = Field(None,
+                                                 description='Water Temperature (F), convert to F if provided in C - Optional')
     comments: Optional[str] = Field(None, description='Comments - Optional')

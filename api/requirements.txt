@@ -7,3 +7,4 @@ aiomysql
 mangum
 alembic
 sqlparse
+cryptography

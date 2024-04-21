@@ -69,7 +69,6 @@ class PlantPlantCross(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     plant_id = Column(Integer, ForeignKey('plants.plant_id'))
     cross_id = Column(Integer, ForeignKey('plant_crosses.cross_id'))
-    role = Column(String(255))  # Male or Female
 
     # Relationship to the Plant and PlantCross tables
     plant = relationship("Plant", back_populates="plants")

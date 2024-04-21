@@ -71,10 +71,9 @@ class PlantPlantCross(BaseModel):
     """
     Used to create a new PlantPlantCross entry, associating plants with their crosses.
     """
-    # id: Optional[int] = Field(None, description='Auto-generated id of the plant-plant cross entry')
+    id: Optional[int] = Field(None, description='Auto-generated id of the plant-plant cross entry')
     plant_id: int = Field(..., description='Plant ID (FK)')
     cross_id: int = Field(..., description='Cross ID (FK)')
-    role: str = Field(..., description='Role in the cross, either "Male" or "Female"')
 
 
 class TasteTest(BaseModel):

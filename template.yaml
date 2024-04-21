@@ -18,9 +18,9 @@ Globals:
 Parameters:
   DbPassword:
     Type: String
-  DbStackName:
-    Type: String
-    Default: plants-db-stack
+  # DbStackName:
+  #   Type: String
+  #   Default: plants-db-stack
   ApiKey:
     Type: String
 
@@ -49,8 +49,7 @@ Resources:
             Method: ANY
       Environment:
         Variables:
-          DB_HOST:
-            Fn::ImportValue: !Sub "${DbStackName}-PlantsDBInstanceEndpoint"
+          DB_HOST: plants.benscholer.com
           DB_NAME: plants
           DB_USER: bscholer
           DB_PASSWORD: !Ref DbPassword

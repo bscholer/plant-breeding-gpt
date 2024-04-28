@@ -1,6 +1,7 @@
 import logging
 import os
 from typing import List, Union
+import csv
 
 import sqlparse
 from databases import Database
@@ -10,6 +11,7 @@ from mangum import Mangum
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import sessionmaker, Session
 from starlette import status
+import pymysql
 
 import models
 import schema
@@ -20,8 +22,8 @@ logger.setLevel(logging.INFO)
 load_dotenv()
 print('loaded dotenv')
 
-DATABASE_URL = f"mysql+pymysql://{os.getenv('DB_USER')}:" \
-               f"{os.getenv('DB_PASSWORD')}@" \
+DATABASE_URL = f"mysql+pymysql://{os.getenv('DB_USERNAME_READ_WRITE')}:" \
+               f"{os.getenv('DB_PASSWORD_READ_WRITE')}@" \
                f"{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
 
 metadata = MetaData()
@@ -33,7 +35,15 @@ database = Database(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 print('created sessionmaker')
 
-apiGatewayEndpoint = "https://0ybnxa9zak.execute-api.us-east-2.amazonaws.com"
+read_only_connection = pymysql.connect(host='192.168.1.120',
+                                    port=33061,
+                                    user=os.getenv('DB_USERNAME_READ_ONLY'),
+                                    password=os.getenv('DB_PASSWORD_READ_ONLY'),
+                                    database=os.getenv('DB_NAME'),
+                                    charset='utf8mb4',
+                                    cursorclass=pymysql.cursors.DictCursor)
+
+apiGatewayEndpoint = "https://plants.benscholer.com"
 
 app = FastAPI(servers=[{"url": apiGatewayEndpoint, "description": "AWS API Gateway"}], title="Plant Database API")
 
@@ -68,46 +78,19 @@ def get_api_key(api_key: str = Header(...)):
     return api_key
 
 
-def has_subquery(parsed_query):
-    for token in parsed_query.tokens:
-        if isinstance(token, sqlparse.sql.Parenthesis):
-            subquery = token.get_real_name()
-            if subquery.strip().lower().startswith("select"):
-                return True
-    return False
-
-
-def is_select_only_subquery(subquery):
-    for token in subquery.tokens:
-        if isinstance(token, sqlparse.sql.Token) and token.value.lower() not in (
-                "select", "from", "where", "join", "left", "right", "inner", "outer"):
-            return False
-    return True
-
-
 @app.post("/run_select_query/", openapi_extra={"x-openai-isConsequential": False}, operation_id="runSelectQuery")
-async def run_select_query(query: str, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
-    # Parse the SQL query to check if it's a SELECT statement
-    parsed_query = sqlparse.parse(query)
-
-    # Check that the first token is a SELECT keyword
-    if not parsed_query:
-        raise HTTPException(status_code=400, detail="Invalid SQL query.")
-
-    first_token = parsed_query[0].tokens[0].value.lower()
-    if first_token != "select":
-        raise HTTPException(status_code=400, detail="Only SELECT statements are allowed.")
-
-    # Check for subqueries in the parsed query
-    if has_subquery(parsed_query[0]):
-        for subquery in parsed_query[0].get_sublists():
-            if not is_select_only_subquery(subquery):
-                raise HTTPException(status_code=400, detail="Subqueries must be SELECT-only.")
-
-    # Execute the query safely
+async def run_select_query(query: str, api_key: str = Depends(get_api_key)):
     try:
-        result = db.execute(query).fetchall()
-        return result
+        # Create a cursor object
+        with read_only_connection.cursor() as cursor:
+            # Execute the SQL query
+            cursor.execute(query)
+            
+            # Fetch all the results
+            results = cursor.fetchall()
+            
+            # Print the results
+            return list(results)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
